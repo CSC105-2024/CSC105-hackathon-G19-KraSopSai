@@ -60,7 +60,7 @@ function SettingPopup({isOpen, onClose, initialData, onSave}) {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
+            <div className="bg-ourwhite rounded-2xl w-full max-w-md shadow-2xl">
                 {/* Header */}
                 <div className="flex items-center justify-between p-6 pb-4">
                     <h2 className="text-2xl font-bold text-black">Setting</h2>
@@ -81,8 +81,8 @@ function SettingPopup({isOpen, onClose, initialData, onSave}) {
                                 onClick={() => setActiveTab(tab)}
                                 className={`flex-1 py-2 px-4 rounded-md font-medium transition-colors ${
                                     activeTab === tab
-                                        ? 'bg-blue-200 text-black'
-                                        : 'text-gray-600 hover:text-black'
+                                        ? 'bg-lblue text-ourblack font-bold'
+                                        : 'text-gray-600 hover:text-ourblack'
                                 }`}
                             >
                                 {tab}
@@ -94,14 +94,14 @@ function SettingPopup({isOpen, onClose, initialData, onSave}) {
                 {/* Content */}
                 <div className="p-6 pt-4">
                     {activeTab === 'Detail' && (
-                        <div className="bg-blue-100 rounded-lg p-4 space-y-4">
+                        <div className="bg-lblue rounded-lg p-4 space-y-4">
                             <div>
                                 <label className="block text-black font-medium mb-2">Name</label>
                                 <input
                                     type="text"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
-                                    className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    className="bg-ourwhite w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 />
                             </div>
                             <div>

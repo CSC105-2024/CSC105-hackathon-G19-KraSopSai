@@ -10,6 +10,8 @@
 }
 
 @theme {
+    --color-ourwhite: #FDFDFF;
+    --color-ourblack: #040316;
     --color-dpink: #E60278;
     --color-lpink: #FFCCEA;
     --color-dblue: #0A84FF;
