@@ -7,8 +7,9 @@ import Home from './pages/Home.jsx';
 import Auth from './pages/Auth.jsx';
 import UserDetail from './pages/userDetail.jsx';
 import BoxingRing from './pages/BoxingRing.jsx';
-import FuneralPopup from './components/FuneralPopup.jsx';
+// import FuneralPopup from './components/FuneralPopup.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
+import TestComponent from './pages/TestComponent.jsx';
 
 const router = createBrowserRouter([
   {
@@ -32,8 +33,8 @@ const router = createBrowserRouter([
                 element: <BoxingRing/>,
             },
             {
-                path: "/funeralPopup",
-                element: <FuneralPopup/>,
+                path: "/Test",
+                element: <TestComponent/>,
             },
         ],
     },
