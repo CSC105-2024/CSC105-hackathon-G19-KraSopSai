@@ -1,12 +1,12 @@
-// import { Hono } from "hono";
-// import { create, getAll, getById, update, del } from "../controllers/hitEffect.controller.ts";
+import { Hono } from "hono";
+import * as hitEffectController from "../controllers/hitEffect.controller.ts";
 
-// const hitEffectRouter = new Hono();
+const hitEffectRouter = new Hono();
 
-// hitEffectRouter.post("/", create);
-// hitEffectRouter.get("/", getAll);
-// hitEffectRouter.get("/:id", getById);
-// hitEffectRouter.patch("/:id", update);
-// hitEffectRouter.delete("/:id", del);
+hitEffectRouter.post("/", hitEffectController.create);
+hitEffectRouter.get("/", hitEffectController.getAll);
+hitEffectRouter.get("/:id", hitEffectController.getById);
+hitEffectRouter.patch("/:id", hitEffectController.update);
+hitEffectRouter.delete("/:id",  hitEffectController.del);
 
-// export { hitEffectRouter };
+export { hitEffectRouter };

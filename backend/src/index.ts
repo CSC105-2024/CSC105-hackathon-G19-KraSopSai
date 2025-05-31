@@ -1,6 +1,7 @@
 import { serve } from '@hono/node-server'
 import { PrismaClient } from './generated/prisma/index.js'
 import { Hono } from 'hono'
+import { mainRouter } from './routes/index.route.ts';
 
 const app = new Hono()
 export const db = new PrismaClient();
@@ -8,6 +9,8 @@ export const db = new PrismaClient();
 app.get('/', (c) => {
   return c.text('Hello Hono!')
 })
+
+app.route("", mainRouter);
 
 db.$connect()
 	.then(() => {
