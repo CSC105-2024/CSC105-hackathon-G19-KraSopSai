@@ -4,31 +4,35 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider          = "mysql"
+  url               = env("DATABASE_URL")
   shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String
-  email     String   @unique
-  password  String
-  hateList  Victim[]
+  id       Int      @id @default(autoincrement())
+  username String
+  email    String   @unique
+  password String
+  hateList Victim[]
 }
 
 model Victim {
   id         Int         @id @default(autoincrement())
   name       String
   hp         Int
-  userId     Int          
-  user       User         @relation(fields: [userId], references: [id])
-  hitEffects HitEffect[]  
+  userId     Int
+  hitEffects HitEffect[]
+  user       User        @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "Victim_userId_fkey")
 }
 
 model HitEffect {
-  id        Int     @id @default(autoincrement())
-  title     String
-  victimId  Int    
-  victim    Victim   @relation(fields: [victimId], references: [id])
+  id       Int    @id @default(autoincrement())
+  title    String
+  victimId Int
+  victim   Victim @relation(fields: [victimId], references: [id])
+
+  @@index([victimId], map: "HitEffect_victimId_fkey")
 }
