@@ -1,12 +1,49 @@
 import React, { useState, useEffect } from 'react';
 import { CustomCursorClick } from '../components/CustomCursorClick';
 import { CustomCursorImage } from '../components/CustomCursorImage';
+import { Link , useSearchParams,useNavigate } from "react-router-dom";
+import { getVictimbyId } from '../api/Victim';
 
 const BoxingRing = () => {
+
+  const [searchParams, setSearchParams] = useSearchParams();
+   const navigate = useNavigate();
+   const Id = searchParams.get('id');
+
+
+   useEffect(() => {
+    if (!Id) {
+      setVictim(null);
+      return;
+    }
+
+    const fetchVictim = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const result = await getVictimbyId(Id);
+        
+        if (result.response.success) {
+          setVictim(result.response.data);
+        } else {
+          setError('Failed to fetch victim data');
+        }
+      } catch (err) {
+        setError('An error occurred while fetching data');
+        console.error('Error fetching victim:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVictim();
+  }, [Id]);
+
   const [Victim,setVictim] = useState({
     name : "bruh",
     reason : "bruh",
-
+    hp : 300
   });
   const [isClicked, setIsClicked] = useState(false);
   const BG = [
@@ -20,6 +57,7 @@ const BoxingRing = () => {
     "./images/stupidface.jpg",
     "./images/ahface.jpg"
   ]
+  const [FaceImage,setFaceImage] = useState();
   const [hp, setHp] = useState(300);
   const [maxhp , setMaxhp] = useState(300);
   const [currentFace, setCurrentFace] = useState(Face[0]);
@@ -35,8 +73,8 @@ const BoxingRing = () => {
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [showPopup, setShowPopup] = useState(false);
   const [currentEffect,setcurremntEffect] = useState();
-  const [hitcrit,sethitcrit] = useState(false)
-
+  const [hitcrit,sethitcrit] = useState(false);
+  const [messages,setmessage] = useState([]);
    const healthPercentage = Math.max(0, (hp / maxhp) * 100);
 
 
@@ -58,19 +96,9 @@ const BoxingRing = () => {
   ] 
   const [weapon, setWeapon] = useState(weapons[0].id);
 
-  const messages = [
-    "Ouch!",
-    "Why?!",
-    "Stop it!",
-    "That hurts!",
-    "Ow ow ow!",
-    "Please no!",
-    "Help me!",
-    "I'm dizzy!",
-    "Make it stop!",
-    "Ahhhh!"
-  ];
+  
 
+  
 
   const toggleWeapon = () =>{
     if(!weaponopen){
@@ -219,12 +247,12 @@ const BoxingRing = () => {
         onClick={handleCircleClick}
       >
     
-        <div className={` bg-white rounded-full border-4 border-black relative ${
-          isClicked ? 'w-110 h-70 shadow-2xl shadow-red-500' : 'w-90 h-90 shadow-xl'
+        <div className={`mt-5 bg-white rounded-full border-4 border-black relative ${
+          isClicked ? 'w-90 h-50 shadow-2xl shadow-red-500' : 'w-70 h-70 shadow-xl'
         }`}>
-          <img className={`rounded-full  ${isClicked ? ' w-110 h-70 object-fill' : 'w-90 h-90 object-cover'}`} src={currentFace}></img>
+          <img className={`rounded-full  ${isClicked ? ' w-90 h-50 object-fill' : 'w-70 h-70 object-cover'}`} src={currentFace}></img>
           <div className="absolute inset-0 rounded-full items-center justify-center">
-            <img className={`${isClicked ? 'rounded-full shadow-2xl w-110 h-70' : 'w-90 h-90'}`} src={face}></img>
+            <img className={`${isClicked ? 'rounded-full shadow-2xl w-90 h-50' : 'w-70 h-70'}`} src={face}></img>
           </div>
         </div>
       </div>
