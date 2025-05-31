@@ -2,16 +2,18 @@ import axios from 'axios';
 
 const Axios = axios.create({
 	baseURL: 'http://localhost:3000',
-	withCredentials: true,
+	withCredentials: true, // This is important for cookies
 	headers: {
 		'Content-Type': 'application/json',
-	}
+	},
+	timeout: 10000, // 10 second timeout
 });
 
-// Request interceptor to add auth token if available
+// Request interceptor
 Axios.interceptors.request.use(
 	(config) => {
-		// If you want to use Authorization header instead of cookies
+		// Since you're using cookies, you don't need the Authorization header
+		// But keep this if you want to support both methods
 		const token = localStorage.getItem('auth_token');
 		if (token) {
 			config.headers.Authorization = `Bearer ${token}`;
@@ -19,24 +21,46 @@ Axios.interceptors.request.use(
 		return config;
 	},
 	(error) => {
+		console.error('Request error:', error);
 		return Promise.reject(error);
 	}
 );
 
-// Response interceptor to handle errors globally
+// Response interceptor with better error handling
 Axios.interceptors.response.use(
 	(response) => {
 		return response;
 	},
 	(error) => {
-		// Handle 401 errors globally
-		if (error.response?.status === 401) {
-			// Clear user data and redirect to login
-			localStorage.removeItem('user');
-			localStorage.removeItem('auth_token');
-			// You can also redirect to login page here if needed
-			// window.location.href = '/auth';
+		console.error('Response error:', error);
+
+		// Handle different error scenarios
+		if (error.response) {
+			// Server responded with error status
+			const status = error.response.status;
+
+			if (status === 401) {
+				// Clear user data and redirect to login
+				localStorage.removeItem('user');
+				localStorage.removeItem('auth_token');
+
+				// Only redirect if not already on auth page
+				if (!window.location.pathname.includes('/auth')) {
+					window.location.href = '/auth';
+				}
+			} else if (status === 403) {
+				console.error('Access forbidden');
+			} else if (status >= 500) {
+				console.error('Server error');
+			}
+		} else if (error.request) {
+			// Request was made but no response received
+			console.error('Network error - no response received');
+		} else {
+			// Something else happened
+			console.error('Error setting up request:', error.message);
 		}
+
 		return Promise.reject(error);
 	}
 );
