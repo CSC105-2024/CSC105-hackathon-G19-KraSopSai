@@ -1,9 +1,10 @@
 import React, {useState} from "react";
 import {NavLink, useNavigate} from "react-router-dom";
-import { EyeOff,Eye } from 'lucide-react';
+import { EyeOff, Eye } from 'lucide-react';
+import { Axios } from '../utils/axiosInstance.js';
 
 export default function AuthPage() {
-    const navigate = useNavigate(); // Add navigation hook
+    const navigate = useNavigate();
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
@@ -41,107 +42,102 @@ export default function AuthPage() {
             if (isLogin) {
                 // Login Logic
                 if (!formData.email || !formData.password) {
-                    throw {error: "Please fill in all required fields"};
+                    throw new Error("Please fill in all required fields");
                 }
 
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(formData.email)) {
-                    throw {error: "Please provide a valid email address"};
+                    throw new Error("Please provide a valid email address");
                 }
 
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                setSuccess("Login successful! Welcome back.");
+                // API call for login
+                const response = await Axios.post('/auth/login', {
+                    email: formData.email,
+                    password: formData.password
+                });
 
-                // Reset form
-                setFormData({username: "", email: "", password: ""});
+                if (response.data.success) {
+                    setSuccess("Login successful! Welcome back.");
 
-                // Navigate to user details page after successful login
-                setTimeout(() => {
-                    navigate("/userDetail");
-                }, 1000); // Small delay to show success message
+                    // Store user data in localStorage (optional)
+                    localStorage.setItem('user', JSON.stringify(response.data.user));
+
+                    // Reset form
+                    setFormData({username: "", email: "", password: ""});
+
+                    // Navigate to user details page after successful login
+                    setTimeout(() => {
+                        navigate("/userDetail");
+                    }, 1000);
+                } else {
+                    throw new Error(response.data.message || "Login failed");
+                }
 
             } else {
                 // Registration Logic
                 if (!formData.username || !formData.email || !formData.password) {
-                    throw {error: "Please fill in all required fields"};
+                    throw new Error("Please fill in all required fields");
+                }
+
+                if (formData.username.trim().length < 3) {
+                    throw new Error("Username must be at least 3 characters long");
                 }
 
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!emailRegex.test(formData.email)) {
-                    throw {error: "Please provide a valid email address"};
+                    throw new Error("Please provide a valid email address");
                 }
 
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 1500));
-                setSuccess("Registration successful! Redirecting to your profile...");
+                if (formData.password.length < 6) {
+                    throw new Error("Password must be at least 6 characters long");
+                }
 
-                // Reset form
-                setFormData({username: "", email: "", password: ""});
+                // API call for registration
+                const response = await Axios.post('/auth/register', {
+                    username: formData.username,
+                    email: formData.email,
+                    password: formData.password
+                });
 
-                // Navigate to user details page after successful registration
-                setTimeout(() => {
-                    navigate("/userDetail");
-                }, 1000); // Small delay to show success message
+                if (response.data.success) {
+                    setSuccess("Registration successful! Redirecting to your profile...");
+
+                    // Store user data in localStorage (optional)
+                    localStorage.setItem('user', JSON.stringify(response.data.user));
+
+                    // Reset form
+                    setFormData({username: "", email: "", password: ""});
+
+                    // Navigate to user details page after successful registration
+                    setTimeout(() => {
+                        navigate("/userDetail");
+                    }, 1000);
+                } else {
+                    throw new Error(response.data.message || "Registration failed");
+                }
             }
         } catch (err) {
             console.error("Auth error:", err);
-            setError(err.error || err.message || "Operation failed. Please try again.");
+
+            // Handle different types of errors
+            if (err.response) {
+                // Server responded with error status
+                const errorMessage = err.response.data.message || err.response.data.error || "Operation failed";
+                setError(errorMessage);
+            } else if (err.request) {
+                // Request was made but no response
+                setError("Network error. Please check your connection.");
+            } else {
+                // Something else happened
+                setError(err.message || "Operation failed. Please try again.");
+            }
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen relative overflow-hidden">
-            {/* Animated Background */}
-            <div className="absolute inset-0 bg-gradient-to-b from-blue-200 via-blue-100 to-green-200">
-                {/* Sky with clouds */}
-                <div className="absolute inset-0">
-                    {/* Animated clouds */}
-                    <div
-                        className="absolute top-16 left-8 w-24 h-12 bg-white rounded-full opacity-70 animate-pulse"></div>
-                    <div
-                        className="absolute top-24 right-16 w-32 h-16 bg-white rounded-full opacity-80 animate-pulse delay-300"></div>
-                    <div
-                        className="absolute top-32 left-1/4 w-20 h-10 bg-white rounded-full opacity-60 animate-pulse delay-500"></div>
-                    <div
-                        className="absolute top-20 right-1/3 w-28 h-14 bg-white rounded-full opacity-75 animate-pulse delay-700"></div>
-                    <div
-                        className="absolute top-40 right-8 w-16 h-8 bg-white rounded-full opacity-65 animate-pulse delay-1000"></div>
-                </div>
-
-                {/* Animated Sun */}
-                <div className="absolute top-18 right-20 w-16 h-16 bg-yellow-300 rounded-full shadow-lg animate-bounce">
-                    {/* Sun rays */}
-                    <div
-                        className="absolute -top-6 left-1/2 w-0.5 h-4 bg-yellow-400 rounded transform -translate-x-1/2"></div>
-                    <div
-                        className="absolute -bottom-6 left-1/2 w-0.5 h-4 bg-yellow-400 rounded transform -translate-x-1/2"></div>
-                    <div
-                        className="absolute -left-6 top-1/2 w-4 h-0.5 bg-yellow-400 rounded transform -translate-y-1/2"></div>
-                    <div
-                        className="absolute -right-6 top-1/2 w-4 h-0.5 bg-yellow-400 rounded transform -translate-y-1/2"></div>
-                    <div className="absolute -top-4 -left-4 w-3 h-0.5 bg-yellow-400 rounded transform rotate-45"></div>
-                    <div
-                        className="absolute -top-4 -right-4 w-3 h-0.5 bg-yellow-400 rounded transform -rotate-45"></div>
-                    <div
-                        className="absolute -bottom-4 -left-4 w-3 h-0.5 bg-yellow-400 rounded transform -rotate-45"></div>
-                    <div
-                        className="absolute -bottom-4 -right-4 w-3 h-0.5 bg-yellow-400 rounded transform rotate-45"></div>
-                </div>
-
-                {/* Flying birds */}
-                <div className="absolute top-1/4 left-1/5 text-lg text-gray-700 animate-bounce">
-                    <span className="inline-block transform rotate-12">⌄</span>
-                    <span className="inline-block transform -rotate-12 ml-1">⌄</span>
-                </div>
-                <div className="absolute top-1/3 right-1/4 text-sm text-gray-600 animate-bounce delay-300">
-                    <span className="inline-block transform rotate-12">⌄</span>
-                    <span className="inline-block transform -rotate-12 ml-1">⌄</span>
-                </div>
-            </div>
-
+        <div className="bg-[url('/images/background.jpg')] bg-cover bg-center h-screen min-h-screen relative overflow-hidden">
             {/* Auth Form Container */}
             <div className="relative z-10 flex items-center justify-center min-h-screen px-4 py-8">
                 <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-8 w-full max-w-sm">
@@ -154,7 +150,11 @@ export default function AuthPage() {
                                     ? 'text-pink-500 border-b-2 border-pink-500'
                                     : 'text-gray-400 hover:text-gray-600'
                             }`}
-                            onClick={() => setIsLogin(true)}
+                            onClick={() => {
+                                setIsLogin(true);
+                                setError("");
+                                setSuccess("");
+                            }}
                             disabled={isLoading}
                         >
                             LOG IN
@@ -165,7 +165,11 @@ export default function AuthPage() {
                                     ? 'text-pink-500 border-b-2 border-pink-500'
                                     : 'text-gray-400 hover:text-gray-600'
                             }`}
-                            onClick={() => setIsLogin(false)}
+                            onClick={() => {
+                                setIsLogin(false);
+                                setError("");
+                                setSuccess("");
+                            }}
                             disabled={isLoading}
                         >
                             REGISTER
@@ -179,21 +183,19 @@ export default function AuthPage() {
 
                     {/* Success/Error Messages */}
                     {error && (
-                        <div
-                            className="w-full mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
+                        <div className="w-full mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-lg text-sm">
                             {error}
                         </div>
                     )}
 
                     {success && (
-                        <div
-                            className="w-full mb-4 p-3 bg-green-50 border border-green-200 text-green-600 rounded-lg text-sm">
+                        <div className="w-full mb-4 p-3 bg-green-50 border border-green-200 text-green-600 rounded-lg text-sm">
                             {success}
                         </div>
                     )}
 
                     {/* Form Fields */}
-                    <div className="space-y-4">
+                    <form onSubmit={handleSubmit} className="space-y-4">
                         {!isLogin && (
                             <div>
                                 <input
@@ -204,6 +206,7 @@ export default function AuthPage() {
                                     placeholder="Username"
                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                     disabled={isLoading}
+                                    required={!isLogin}
                                 />
                             </div>
                         )}
@@ -217,6 +220,7 @@ export default function AuthPage() {
                                 placeholder="Email"
                                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                 disabled={isLoading}
+                                required
                             />
                         </div>
 
@@ -229,6 +233,7 @@ export default function AuthPage() {
                                 placeholder="Password"
                                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                 disabled={isLoading}
+                                required
                             />
                             <button
                                 type="button"
@@ -236,16 +241,12 @@ export default function AuthPage() {
                                 onClick={() => setShowPassword(!showPassword)}
                                 disabled={isLoading}
                             >
-                                {showPassword ? (
-                                    <Eye />
-                                ) : (
-                                    <EyeOff />
-                                )}
+                                {showPassword ? <Eye size={20} /> : <EyeOff size={20} />}
                             </button>
                         </div>
 
                         <button
-                            onClick={handleSubmit}
+                            type="submit"
                             disabled={isLoading}
                             className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
                         >
@@ -254,11 +255,9 @@ export default function AuthPage() {
                                 : (isLogin ? "LOGIN" : "REGISTER")
                             }
                         </button>
-                    </div>
+                    </form>
                 </div>
             </div>
-
         </div>
-
     );
 }

@@ -1,6 +1,5 @@
 import React from 'react';
 
-// Modal Overlay Component
 const ModalOverlay = ({ isOpen, onClose, children }) => {
     if (!isOpen) return null;
 
@@ -20,7 +19,6 @@ const ModalOverlay = ({ isOpen, onClose, children }) => {
     );
 };
 
-// Confirmation Modal Component
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
     return (
         <ModalOverlay isOpen={isOpen} onClose={onClose}>
