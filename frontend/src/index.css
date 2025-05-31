@@ -1,1 +1,22 @@
 @import "tailwindcss";
+
+@font-face {
+  font-family: PlaypenSans-regular;
+  src: url("../public/fonts/PlaypenSans-Regular.ttf");
+
+}@font-face {
+  font-family: Rye;
+  src: url("../public/fonts/Rye-Regular.ttf");
+}
+
+@theme {
+    --color-dpink: #E60278;
+    --color-lpink: #FFCCEA;
+    --color-dblue: #0A84FF;
+    --color-lblue: #BFECFF;
+    --color-yellow: #FFF6E3;
+}
+
+.bg-custom-lightgradient {
+  background-image: linear-gradient(90deg, #BFECFF 0%, #FFCCEA 100%);
+}
