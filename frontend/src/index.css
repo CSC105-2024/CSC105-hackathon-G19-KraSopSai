@@ -10,6 +10,8 @@
 }
 
 @theme {
+    --color-ourwhite: #FDFDFF;
+    --color-ourblack: #040316;
     --color-dpink: #E60278;
     --color-lpink: #FFCCEA;
     --color-dblue: #0A84FF;
@@ -19,4 +21,11 @@
 
 .bg-custom-lightgradient {
   background-image: linear-gradient(90deg, #BFECFF 0%, #FFCCEA 100%);
+}
+.bg-custom-mediumgradient {
+  background-image: var(--gradian-button, linear-gradient(90deg, #81C9FF 0%, #FF9DD0 100%));
+}
+
+body{
+    font-family: 'PlaypenSans-regular', sans-serif;
 }
