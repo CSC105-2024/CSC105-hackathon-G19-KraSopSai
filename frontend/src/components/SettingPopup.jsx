@@ -1,22 +1,64 @@
 import React, {useState} from 'react';
 import { X, Upload } from 'lucide-react';
+import { Axios } from '../utils/axiosInstance';
+import { createHitEffect } from '../api/hitEffectAPI';
 
-function SettingPopup({isOpen, onClose, initialData, onSave}) {
+function SettingPopup({isOpen, onClose, victimId, onSave}) {
     const [activeTab, setActiveTab] = useState('Detail');
-    const [name, setName] = useState(initialData?.name || 'Stupid worker friend master of desto');
-    const [reason, setReason] = useState(initialData?.reason || 'He stupid as f*** so annoying ahhhhhhhhhhhhhh');
-    const [hitEffects, setHitEffects] = useState(initialData?.hitEffects || ['Ahhhh', 'Sorry it my fau..']);
-    const [characterImage, setCharacterImage] = useState(initialData?.image || null);
+    const [name, setName] = useState();
+    const [reason, setReason] = useState();
+    const [hitEffects, setHitEffects] = useState([]);
+    const [characterImage, setCharacterImage] = useState(victimId?.image || null);
     const [editingEffect, setEditingEffect] = useState(null);
     const [editValue, setEditValue] = useState('');
 
-    if (!isOpen) return null;
+    if (!isOpen) {
+        return null;
+    }
 
-    const addHitEffect = () => {
-        setHitEffects([...hitEffects, 'New effect']);
+   /* const addHitEffect = async () => {
+        try{
+            const newEffect = await createHitEffect({ 
+                title: 'New Effect',
+                victimId: victimId,
+            });
+            if (newEffect.success) {
+                setHitEffects([...hitEffects, newEffect.data]); 
+                return newEffect.data;
+            } else {
+                console.error('Failed to create hit effect:', newEffect.data);
+            }
+        } catch (error) {
+            console.error('Error creating hit effect:', error);
+        }
+};*/
+const addHitEffect = async (data) => {
+  try {
+    const response = await Axios.post('/hitEffect', data);
+    return {
+      success: true,
+      data: response.data,
     };
+  } catch (e) {
+    console.error(
+      'Error in createHitEffect:',
+      e?.response?.data || e?.message || e
+    );
+    return {
+      success: false,
+      data: e?.response?.data || null,
+    };
+  }
+};
 
-    const editHitEffect = (index, value) => {
+    const edit = async (index, value) => {
+        console.log('Editing hit effect at index:', index, 'with value:', value);
+
+        const effectId = newEffects[index].title = value;
+        const data = await editHitEffect({
+            id: effectId,
+            title: value,
+        });
         const newEffects = [...hitEffects];
         newEffects[index] = value;
         setHitEffects(newEffects);
@@ -150,6 +192,21 @@ function SettingPopup({isOpen, onClose, initialData, onSave}) {
                                     </div>
                                 ))}
                             </div>
+                            {/* <div className="flex gap-2 mb-2">
+                                <input
+                                    type="text"
+                                    value={newEffect}
+                                    onChange={e => setNewEffect(e.target.value)}
+                                    placeholder="Enter new effect"
+                                    className="flex-1 p-2 border border-gray-300 rounded"
+                                />
+                                <button
+                                    onClick={addHitEffect}
+                                    className="px-4 py-2 bg-blue-400 text-white rounded"
+                                >
+                                    + Add Effect
+                                </button>
+                            </div> */}
                             <button
                                 onClick={addHitEffect}
                                 className="w-full p-2 sm:p-3 border-2 border-dashed border-gray-400 rounded-lg text-gray-600 hover:border-gray-600 hover:text-black text-sm sm:text-base"

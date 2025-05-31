@@ -99,7 +99,8 @@ export const getAll = async (c: Context) => {
 export const update = async (c: Context) => {
   try {
     const id = Number(c.req.param("id"));
-    if (isNaN(id)) {
+    const body = await c.req.json();
+    if (isNaN(id) && !body.title && !body.victimId) {
       return c.json(
         {
           success: false,
@@ -109,7 +110,6 @@ export const update = async (c: Context) => {
         400
       );
     }
-    const body = await c.req.json();
     const updatedHitEffect = await hitEffectModel.update(id, body);
     if (!updatedHitEffect) {
       return c.json(
@@ -151,7 +151,7 @@ export const del = async (c: Context) => {
         400
       );
     }
-    await hitEffectModel.deleteHitEffect(id);
+    const body = await hitEffectModel.deleteHitEffect(id);
     return c.json({
       success: true,
       msg: "hitEffect deleted successfully",

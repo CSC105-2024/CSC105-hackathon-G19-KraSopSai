@@ -2,11 +2,11 @@
 
 @font-face {
   font-family: PlaypenSans-regular;
-  src: url("../public/fonts/PlaypenSans-Regular.ttf");
+  src: url("../fonts/PlaypenSans-Regular.ttf");
 
 }@font-face {
   font-family: Rye;
-  src: url("../public/fonts/Rye-Regular.ttf");
+  src: url("../fonts/Rye-Regular.ttf");
 }
 
 @theme {

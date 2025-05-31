@@ -23,8 +23,6 @@ app.get('/', (c) => {
 // Connect main router directly to root (removed '/api' prefix)
 app.route('/', mainRouter);
 
-app.route("", mainRouter);
-
 // Error handling for uncaught exceptions
 process.on('uncaughtException', (error) => {
 	console.error('Uncaught Exception:', error);

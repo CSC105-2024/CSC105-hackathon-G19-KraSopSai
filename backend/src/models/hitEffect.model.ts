@@ -15,10 +15,9 @@ export const createHitEffect = async (
 ) => {
   const newHitEffect = await db.hitEffect.create({
     data: {
+      
       title: data.title,
-      victim: {
-        connect: { id: data.victimId },
-      },
+      victimId: data.victimId,
     },
   });
   return newHitEffect;
@@ -38,15 +37,15 @@ export const getHitEffectById = async (id: number) => {
   return hitEffectId;
 };
 
-export const update = async (id: number, data: { title?: string; victimId?: number }) => {
+export const update = async (id: number, data: { title: string; victimId: number }) => {
   const editHitEffect = await db.hitEffect.update({
     where: { id },
     data: {
       title: data.title,
-      victim: data.victimId ? { connect: { id: data.victimId } } : undefined,
+      victimId: data.victimId,
     },
   });
-  return editHitEffect; // Added missing return statement
+  return editHitEffect; 
 };
 
 export const deleteHitEffect = async (id: number) => {
