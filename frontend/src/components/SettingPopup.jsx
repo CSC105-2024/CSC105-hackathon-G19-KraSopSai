@@ -16,25 +16,10 @@ function SettingPopup({isOpen, onClose, victimId, onSave}) {
         return null;
     }
 
-   /* const addHitEffect = async () => {
-        try{
-            const newEffect = await createHitEffect({ 
-                title: 'New Effect',
-                victimId: victimId,
-            });
-            if (newEffect.success) {
-                setHitEffects([...hitEffects, newEffect.data]); 
-                return newEffect.data;
-            } else {
-                console.error('Failed to create hit effect:', newEffect.data);
-            }
-        } catch (error) {
-            console.error('Error creating hit effect:', error);
-        }
-};*/
+
 const addHitEffect = async (data) => {
   try {
-    const response = await Axios.post('/hitEffect', data);
+    const response = await createHitEffect('/hitEffect', data);
     return {
       success: true,
       data: response.data,
