@@ -3,7 +3,6 @@ import { PrismaClient } from './generated/prisma/index.js';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { mainRouter } from './routes/index.route.ts';
-import { mainRouter } from './routes/index.route.js';
 
 const app = new Hono();
 export const db = new PrismaClient();
