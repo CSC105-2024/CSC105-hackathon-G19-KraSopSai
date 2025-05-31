@@ -20,3 +20,7 @@
 .bg-custom-lightgradient {
   background-image: linear-gradient(90deg, #BFECFF 0%, #FFCCEA 100%);
 }
+
+body{
+    font-family: 'PlaypenSans-regular', sans-serif;
+}
