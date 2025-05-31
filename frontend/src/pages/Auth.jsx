@@ -1,7 +1,7 @@
 import React, {useState} from "react";
 import {NavLink, useNavigate} from "react-router-dom";
 import { EyeOff, Eye } from 'lucide-react';
-import { Axios } from '../utils/axiosInstance.js';
+import { Axios } from '../utils/axiosInstance.js'
 
 export default function AuthPage() {
     const navigate = useNavigate();
@@ -50,7 +50,7 @@ export default function AuthPage() {
                     throw new Error("Please provide a valid email address");
                 }
 
-                // API call for login
+                // API call for login - Fixed URL path
                 const response = await Axios.post('/auth/login', {
                     email: formData.email,
                     password: formData.password
@@ -59,8 +59,9 @@ export default function AuthPage() {
                 if (response.data.success) {
                     setSuccess("Login successful! Welcome back.");
 
-                    // Store user data in localStorage (optional)
+                    // Store user data in localStorage
                     localStorage.setItem('user', JSON.stringify(response.data.user));
+                    localStorage.setItem('token', response.data.token);
 
                     // Reset form
                     setFormData({username: "", email: "", password: ""});
@@ -92,7 +93,7 @@ export default function AuthPage() {
                     throw new Error("Password must be at least 6 characters long");
                 }
 
-                // API call for registration
+                // API call for registration - Fixed URL path
                 const response = await Axios.post('/auth/register', {
                     username: formData.username,
                     email: formData.email,
@@ -102,7 +103,7 @@ export default function AuthPage() {
                 if (response.data.success) {
                     setSuccess("Registration successful! Redirecting to your profile...");
 
-                    // Store user data in localStorage (optional)
+                    // Store user data in localStorage
                     localStorage.setItem('user', JSON.stringify(response.data.user));
 
                     // Reset form
@@ -126,13 +127,29 @@ export default function AuthPage() {
                 setError(errorMessage);
             } else if (err.request) {
                 // Request was made but no response
-                setError("Network error. Please check your connection.");
+                setError("Network error. Please check your connection and make sure the server is running.");
             } else {
                 // Something else happened
                 setError(err.message || "Operation failed. Please try again.");
             }
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    // Handle logout (you might want this in a separate component)
+    const handleLogout = async () => {
+        try {
+            await Axios.post('/auth/logout');
+            localStorage.removeItem('user');
+            localStorage.removeItem('auth_token');
+            navigate('/auth');
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Even if logout fails on server, clear local data
+            localStorage.removeItem('user');
+            localStorage.removeItem('auth_token');
+            navigate('/auth');
         }
     };
 
@@ -143,17 +160,18 @@ export default function AuthPage() {
                 <div className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-xl p-8 w-full max-w-sm">
 
                     {/* Login/Register Toggle */}
-                    <div className="flex mb-8 text-sm font-medium">
+                    <div className="flex mb-8 text-sm font-semibold">
                         <button
                             className={`flex-1 py-2 text-center transition-all duration-200 ${
                                 isLogin
-                                    ? 'text-pink-500 border-b-2 border-pink-500'
+                                    ? 'text-pink-500 border-b-4 border-pink-500'
                                     : 'text-gray-400 hover:text-gray-600'
                             }`}
                             onClick={() => {
                                 setIsLogin(true);
                                 setError("");
                                 setSuccess("");
+                                setFormData({username: "", email: "", password: ""});
                             }}
                             disabled={isLoading}
                         >
@@ -162,13 +180,14 @@ export default function AuthPage() {
                         <button
                             className={`flex-1 py-2 text-center transition-all duration-200 ${
                                 !isLogin
-                                    ? 'text-pink-500 border-b-2 border-pink-500'
+                                    ? 'text-pink-500 border-b-4 border-pink-500'
                                     : 'text-gray-400 hover:text-gray-600'
                             }`}
                             onClick={() => {
                                 setIsLogin(false);
                                 setError("");
                                 setSuccess("");
+                                setFormData({username: "", email: "", password: ""});
                             }}
                             disabled={isLoading}
                         >
@@ -203,10 +222,11 @@ export default function AuthPage() {
                                     name="username"
                                     value={formData.username}
                                     onChange={handleChange}
-                                    placeholder="Username"
+                                    placeholder="Username (min 3 characters)"
                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                     disabled={isLoading}
                                     required={!isLogin}
+                                    minLength={3}
                                 />
                             </div>
                         )}
@@ -217,7 +237,7 @@ export default function AuthPage() {
                                 name="email"
                                 value={formData.email}
                                 onChange={handleChange}
-                                placeholder="Email"
+                                placeholder="Email address"
                                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                 disabled={isLoading}
                                 required
@@ -230,10 +250,11 @@ export default function AuthPage() {
                                 name="password"
                                 value={formData.password}
                                 onChange={handleChange}
-                                placeholder="Password"
+                                placeholder={isLogin ? "Password" : "Password (min 6 characters)"}
                                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg pr-12 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                                 disabled={isLoading}
                                 required
+                                minLength={isLogin ? undefined : 6}
                             />
                             <button
                                 type="button"
@@ -248,7 +269,7 @@ export default function AuthPage() {
                         <button
                             type="submit"
                             disabled={isLoading}
-                            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                            className="w-full bg-custom-mediumgradient hover:from-blue-600 hover:to-purple-600 text-white py-3 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
                         >
                             {isLoading
                                 ? (isLogin ? "LOGGING IN..." : "REGISTERING...")

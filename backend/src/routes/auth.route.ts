@@ -1,28 +1,20 @@
 import { Hono } from "hono";
-import {
-    register,
-    login,
-    logout,
-    getProfile,
-    getAllUsersController,
-    getUserByIdController,
-    updateUsernameController,
-    createUserController
-} from "../controllers/auth.controller.js";
+import * as authController from "../controllers/auth.controller.js";
 import { authMiddleware } from "../middlewares/auth.middlewares.js";
 
 const auth = new Hono();
 
 // Public routes
-auth.post("/register", register);
-auth.post("/login", login);
-auth.post("/create-user", createUserController); // Admin endpoint to create users
+auth.post("/register", authController.register);
+auth.post("/login", authController.login);
+auth.post("/create-user", authController.createUserController);
 
 // Protected routes
-auth.post("/logout", authMiddleware, logout);
-auth.get("/profile", authMiddleware, getProfile);
-auth.get("/users", authMiddleware, getAllUsersController);
-auth.get("/users/:id", authMiddleware, getUserByIdController);
-auth.put("/update-username", authMiddleware, updateUsernameController);
+auth.post("/logout", authMiddleware, authController.logout);
+auth.get("/profile", authMiddleware, authController.getProfile);
+auth.get("/users", authMiddleware, authController.getAllUsersController);
+auth.get("/users/:id", authMiddleware, authController.getUserByIdController);
+auth.put("/update-username", authMiddleware, authController.updateUsernameController);
+auth.get("/test", (c) => c.json({ message: "Auth routes working!" }));
 
 export default auth;

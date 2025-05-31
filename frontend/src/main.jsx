@@ -1,6 +1,6 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import {StrictMode} from 'react'
+import {createRoot} from 'react-dom/client'
+import {createBrowserRouter, RouterProvider} from "react-router-dom";
 import './index.css'
 import App from './App.jsx'
 import Home from './pages/Home.jsx';
@@ -10,12 +10,13 @@ import BoxingRing from './pages/BoxingRing.jsx';
 // import FuneralPopup from './components/FuneralPopup.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import TestComponent from './pages/TestComponent.jsx';
+import ProtectedRoute from "./utils/checkAuth.jsx";
 
 const router = createBrowserRouter([
-  {
-    path: "/", // Home route
-    element: <App />, // Render the App component
-    children: [
+    {
+        path: "/", // Home route
+        element: <App/>, // Render the App component
+        children: [
             {
                 index: true,
                 element: <Home/>,
@@ -26,11 +27,11 @@ const router = createBrowserRouter([
             },
             {
                 path: "/userDetail",
-                element: <UserDetail/>,
+                element: <ProtectedRoute><UserDetail/></ProtectedRoute>,
             },
             {
                 path: "/boxingRing",
-                element: <BoxingRing/>,
+                element: <ProtectedRoute><BoxingRing/></ProtectedRoute>,
             },
             {
                 path: "/Test",
@@ -45,7 +46,7 @@ const router = createBrowserRouter([
 ]);
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>,
+    <StrictMode>
+        <RouterProvider router={router}/>
+    </StrictMode>,
 )
