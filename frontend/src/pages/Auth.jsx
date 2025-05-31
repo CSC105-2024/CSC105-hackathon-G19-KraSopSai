@@ -1,14 +1,14 @@
 import React, {useState} from "react";
-import {NavLink} from "react-router-dom";
+import {NavLink, useNavigate} from "react-router-dom";
 import { EyeOff,Eye } from 'lucide-react';
 
 export default function AuthPage() {
+    const navigate = useNavigate(); // Add navigation hook
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [isLogin, setIsLogin] = useState(true);
-
 
     // Form data
     const [formData, setFormData] = useState({
@@ -55,6 +55,12 @@ export default function AuthPage() {
 
                 // Reset form
                 setFormData({username: "", email: "", password: ""});
+
+                // Navigate to user details page after successful login
+                setTimeout(() => {
+                    navigate("/userDetail");
+                }, 1000); // Small delay to show success message
+
             } else {
                 // Registration Logic
                 if (!formData.username || !formData.email || !formData.password) {
@@ -68,11 +74,15 @@ export default function AuthPage() {
 
                 // Simulate API call
                 await new Promise(resolve => setTimeout(resolve, 1500));
-                setSuccess("Registration successful! You can now login.");
-                setIsLogin(true);
+                setSuccess("Registration successful! Redirecting to your profile...");
 
                 // Reset form
                 setFormData({username: "", email: "", password: ""});
+
+                // Navigate to user details page after successful registration
+                setTimeout(() => {
+                    navigate("/userDetail");
+                }, 1000); // Small delay to show success message
             }
         } catch (err) {
             console.error("Auth error:", err);
