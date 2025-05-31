@@ -7,7 +7,7 @@ import Home from './pages/Home.jsx';
 import Auth from './pages/Auth.jsx';
 import UserDetail from './pages/userDetail.jsx';
 import BoxingRing from './pages/BoxingRing.jsx';
-import FuneralPopup from './pages/FuneralPopup.jsx';
+import FuneralPopup from './components/FuneralPopup.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 
 const router = createBrowserRouter([
