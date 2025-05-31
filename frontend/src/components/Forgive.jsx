@@ -5,13 +5,12 @@ const ModalOverlay = ({ isOpen, onClose, children }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
+
             <div
                 className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
                 onClick={onClose}
             ></div>
 
-            {/* Modal Content */}
             <div className="relative bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4 transform transition-all">
                 {children}
             </div>
@@ -36,13 +35,13 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
                 <div className="flex gap-4 justify-center">
                     <button
                         onClick={onClose}
-                        className="px-8 py-3 bg-gray-900 text-white rounded-full font-semibold hover:bg-gray-800 transition-colors min-w-24"
+                        className="px-8 py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors min-w-24"
                     >
                         No
                     </button>
                     <button
                         onClick={onConfirm}
-                        className="px-8 py-3 bg-pink-500 text-white rounded-full font-semibold hover:bg-pink-600 transition-colors min-w-24"
+                        className="px-8 py-3 bg-pink-500 text-white rounded-lg font-semibold hover:bg-pink-600 transition-colors min-w-24"
                     >
                         Yes
                     </button>
