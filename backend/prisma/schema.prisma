@@ -13,3 +13,27 @@ datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id       Int      @id @default(autoincrement())
+  username String
+  email    String   @unique
+  password String
+  hateList Victim[]
+}
+
+model Victim {
+  id        Int         @id @default(autoincrement())
+  name      String
+  hp        Int
+  userid    Int
+  user      User        @relation(fields: [userid], references: [id])
+  hitEffect HitEffect[]
+}
+
+model HitEffect {
+  id       Int    @id @default(autoincrement())
+  title    String
+  victimid Int
+  victim   Victim @relation(fields: [victimid], references: [id])
+}
