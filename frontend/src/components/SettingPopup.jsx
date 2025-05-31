@@ -128,7 +128,7 @@ function SettingPopup({isOpen, onClose, initialData, onSave}) {
                                                 value={editValue}
                                                 onChange={(e) => setEditValue(e.target.value)}
                                                 onBlur={() => editHitEffect(index, editValue)}
-                                                onKeyPress={(e) => e.key === 'Enter' && editHitEffect(index, editValue)}
+                                                onKeyDown={(e) => e.key === 'Enter' && editHitEffect(index, editValue)}
                                                 className="flex-1 p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                                                 autoFocus
                                             />
