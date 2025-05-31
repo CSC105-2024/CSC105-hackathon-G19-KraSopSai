@@ -20,6 +20,7 @@ model User {
 model Victim {
   id         Int         @id @default(autoincrement())
   name       String
+  reason     String
   hp         Int
   userId     Int
   hitEffects HitEffect[]

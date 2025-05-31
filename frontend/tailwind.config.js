@@ -3,9 +3,6 @@ export default {
   content: [],
   theme: {
     extend: {
-      cursor : {
-       
-      }
     },
   },
   plugins: [],
