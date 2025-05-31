@@ -10,6 +10,8 @@
 }
 
 @theme {
+    --font-play-pen-sans: "PlaypenSans-regular";
+    --font-rye: "Rye";
     --color-ourwhite: #FDFDFF;
     --color-ourblack: #040316;
     --color-dpink: #E60278;

@@ -11,7 +11,6 @@ export default function AuthPage() {
     const [success, setSuccess] = useState("");
     const [isLogin, setIsLogin] = useState(true);
 
-    // Form data
     const [formData, setFormData] = useState({
         username: "",
         email: "",
@@ -40,7 +39,7 @@ export default function AuthPage() {
 
         try {
             if (isLogin) {
-                // Login Logic
+
                 if (!formData.email || !formData.password) {
                     throw new Error("Please fill in all required fields");
                 }
@@ -50,7 +49,6 @@ export default function AuthPage() {
                     throw new Error("Please provide a valid email address");
                 }
 
-                // API call for login - Fixed URL path
                 const response = await Axios.post('/auth/login', {
                     email: formData.email,
                     password: formData.password
@@ -59,14 +57,11 @@ export default function AuthPage() {
                 if (response.data.success) {
                     setSuccess("Login successful! Welcome back.");
 
-                    // Store user data in localStorage
                     localStorage.setItem('user', JSON.stringify(response.data.user));
                     localStorage.setItem('token', response.data.token);
 
-                    // Reset form
                     setFormData({username: "", email: "", password: ""});
 
-                    // Navigate to user details page after successful login
                     setTimeout(() => {
                         navigate("/userDetail");
                     }, 1000);
@@ -75,7 +70,7 @@ export default function AuthPage() {
                 }
 
             } else {
-                // Registration Logic
+                // Register
                 if (!formData.username || !formData.email || !formData.password) {
                     throw new Error("Please fill in all required fields");
                 }
@@ -93,7 +88,6 @@ export default function AuthPage() {
                     throw new Error("Password must be at least 6 characters long");
                 }
 
-                // API call for registration - Fixed URL path
                 const response = await Axios.post('/auth/register', {
                     username: formData.username,
                     email: formData.email,
@@ -103,13 +97,10 @@ export default function AuthPage() {
                 if (response.data.success) {
                     setSuccess("Registration successful! Redirecting to your profile...");
 
-                    // Store user data in localStorage
                     localStorage.setItem('user', JSON.stringify(response.data.user));
 
-                    // Reset form
                     setFormData({username: "", email: "", password: ""});
 
-                    // Navigate to user details page after successful registration
                     setTimeout(() => {
                         navigate("/userDetail");
                     }, 1000);

@@ -7,10 +7,11 @@ import Home from './pages/Home.jsx';
 import Auth from './pages/Auth.jsx';
 import UserDetail from './pages/userDetail.jsx';
 import BoxingRing from './pages/BoxingRing.jsx';
-// import FuneralPopup from './components/FuneralPopup.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
 import TestComponent from './pages/TestComponent.jsx';
 import ProtectedRoute from "./utils/checkAuth.jsx";
+import FuneralPopup from "./components/FuneralPopup.jsx";
+import Forgive from "./components/Forgive.jsx";
 
 const router = createBrowserRouter([
     {
@@ -36,6 +37,14 @@ const router = createBrowserRouter([
             {
                 path: "/Test",
                 element: <TestComponent/>,
+            },
+            {
+                path: "/fu",
+                element: <FuneralPopup/>,
+            },
+            {
+                path: "/del",
+                element: <Forgive/>,
             },
         ],
     },
