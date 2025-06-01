@@ -1,62 +1,120 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import { X, Upload } from 'lucide-react';
 import { Axios } from '../utils/axiosInstance';
-import { createHitEffect } from '../api/hitEffectAPI';
+import { createHitEffect, editHitEffect, deleteHitEffect } from '../api/hitEffectAPI';
 
-function SettingPopup({isOpen, onClose, victimId, onSave}) {
+function SettingPopup({ isOpen, onClose, victimId, onSave }) {
     const [activeTab, setActiveTab] = useState('Detail');
-    const [name, setName] = useState();
-    const [reason, setReason] = useState();
-    const [hitEffects, setHitEffects] = useState([]);
+    const [name, setName] = useState('');
+    const [reason, setReason] = useState('');
+    const [hitEffects, setHitEffects] = useState([]); // Array of strings or objects
     const [characterImage, setCharacterImage] = useState(victimId?.image || null);
     const [editingEffect, setEditingEffect] = useState(null);
     const [editValue, setEditValue] = useState('');
+    const [newEffect, setNewEffect] = useState('');
 
     if (!isOpen) {
         return null;
     }
 
+    // Add Hit Effect
+    const addHitEffect = async () => {
+        // For now, just add a placeholder. You can modify this to open an input dialog
+        const effectText = prompt('Enter new hit effect:');
+        if (!effectText?.trim()) return;
 
-const addHitEffect = async (data) => {
-  try {
-    const response = await createHitEffect('/hitEffect', data);
-    return {
-      success: true,
-      data: response.data,
-    };
-  } catch (e) {
-    console.error(
-      'Error in createHitEffect:',
-      e?.response?.data || e?.message || e
-    );
-    return {
-      success: false,
-      data: e?.response?.data || null,
-    };
-  }
-};
+        try {
+            const response = await createHitEffect({
+                title: effectText,
+                victimId,
+            });
 
-    const edit = async (index, value) => {
+            if (response.success && response.data?.data) {
+                // If API returns an object with title property
+                const newEffectData = typeof response.data.data === 'object' ? response.data.data.title : response.data.data;
+                setHitEffects([...hitEffects, newEffectData]);
+            } else {
+                // Fallback: add locally if API fails
+                setHitEffects([...hitEffects, effectText]);
+            }
+        } catch (e) {
+            console.error('Error adding hit effect:', e);
+            // Fallback: add locally if API fails
+            setHitEffects([...hitEffects, effectText]);
+        }
+    };
+
+    // Edit Hit Effect
+    const editHitEffectHandler = async (index, value) => {
         console.log('Editing hit effect at index:', index, 'with value:', value);
 
-        const effectId = newEffects[index].title = value;
-        const data = await editHitEffect({
-            id: effectId,
-            title: value,
-        });
-        const newEffects = [...hitEffects];
-        newEffects[index] = value;
-        setHitEffects(newEffects);
-        setEditingEffect(null);
+        const currentEffect = hitEffects[index];
+
+        try {
+            // If this is an object with an ID, try to update via API
+            if (typeof currentEffect === 'object' && currentEffect.id) {
+                const response = await editHitEffect(currentEffect.id, {
+                    title: value,
+                    victimId
+                });
+
+                if (response.success && response.data?.data) {
+                    const newEffects = [...hitEffects];
+                    newEffects[index] = typeof response.data.data === 'object' ? response.data.data.title : response.data.data;
+                    setHitEffects(newEffects);
+                } else {
+                    // Fallback to local update
+                    const newEffects = [...hitEffects];
+                    newEffects[index] = value;
+                    setHitEffects(newEffects);
+                }
+            } else {
+                // Local update only (string values)
+                const newEffects = [...hitEffects];
+                newEffects[index] = value;
+                setHitEffects(newEffects);
+            }
+            setEditingEffect(null);
+        } catch (e) {
+            console.error('Error editing hit effect:', e);
+            // Fallback to local update
+            const newEffects = [...hitEffects];
+            newEffects[index] = value;
+            setHitEffects(newEffects);
+            setEditingEffect(null);
+        }
     };
 
-    const deleteHitEffect = (index) => {
-        setHitEffects(hitEffects.filter((_, i) => i !== index));
+    // Delete Hit Effect
+    const deleteHitEffectHandler = async (index) => {
+        const effect = hitEffects[index];
+
+        try {
+            // If this is an object with an ID, try to delete via API
+            if (typeof effect === 'object' && effect.id) {
+                const response = await deleteHitEffect(effect.id);
+                if (response.success) {
+                    setHitEffects(hitEffects.filter((_, i) => i !== index));
+                } else {
+                    // Fallback to local deletion
+                    setHitEffects(hitEffects.filter((_, i) => i !== index));
+                }
+            } else {
+                // Local deletion only (string values)
+                setHitEffects(hitEffects.filter((_, i) => i !== index));
+            }
+        } catch (e) {
+            console.error('Error deleting hit effect:', e);
+            // Fallback to local deletion
+            setHitEffects(hitEffects.filter((_, i) => i !== index));
+        }
     };
 
     const startEditing = (index) => {
         setEditingEffect(index);
-        setEditValue(hitEffects[index]);
+        // Handle both string and object formats
+        const effect = hitEffects[index];
+        setEditValue(typeof effect === 'object' ? effect.title : effect);
     };
 
     const handleImageUpload = (event) => {
@@ -79,7 +137,7 @@ const addHitEffect = async (data) => {
             name,
             reason,
             hitEffects,
-            image: characterImage // Include image in saved data
+            image: characterImage,
         };
         onSave?.(data);
         onClose();
@@ -145,7 +203,7 @@ const addHitEffect = async (data) => {
 
                     {activeTab === 'Hit Effect' && (
                         <div className="bg-lblue rounded-lg p-3 sm:p-4">
-                            <h3 className="text-black font-medium mb-3 sm:mb-4 text-sm sm:text-base">Add you hit effect!</h3>
+                            <h3 className="text-black font-medium mb-3 sm:mb-4 text-sm sm:text-base">Add your hit effect!</h3>
                             <div className="space-y-2 sm:space-y-3 mb-3 sm:mb-4 max-h-40 sm:max-h-48 overflow-y-auto">
                                 {hitEffects.map((effect, index) => (
                                     <div key={index} className="flex items-center gap-2 sm:gap-3 bg-white p-2 sm:p-3 rounded-lg">
@@ -154,13 +212,15 @@ const addHitEffect = async (data) => {
                                                 type="text"
                                                 value={editValue}
                                                 onChange={(e) => setEditValue(e.target.value)}
-                                                onBlur={() => editHitEffect(index, editValue)}
-                                                onKeyDown={(e) => e.key === 'Enter' && editHitEffect(index, editValue)}
+                                                onBlur={() => editHitEffectHandler(index, editValue)}
+                                                onKeyDown={(e) => e.key === 'Enter' && editHitEffectHandler(index, editValue)}
                                                 className="flex-1 p-1.5 sm:p-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-lblue text-sm sm:text-base"
                                                 autoFocus
                                             />
                                         ) : (
-                                            <span className="flex-1 text-black text-sm sm:text-base break-words">{effect}</span>
+                                            <span className="flex-1 text-black text-sm sm:text-base break-words">
+                                                {typeof effect === 'object' ? effect.title : effect}
+                                            </span>
                                         )}
                                         <button
                                             onClick={() => startEditing(index)}
@@ -169,7 +229,7 @@ const addHitEffect = async (data) => {
                                             Edit
                                         </button>
                                         <button
-                                            onClick={() => deleteHitEffect(index)}
+                                            onClick={() => deleteHitEffectHandler(index)}
                                             className="bg-black hover:bg-gray-800 text-white w-6 h-6 sm:w-8 sm:h-8 rounded flex items-center justify-center font-bold text-xs sm:text-sm flex-shrink-0"
                                         >
                                             X
@@ -177,21 +237,6 @@ const addHitEffect = async (data) => {
                                     </div>
                                 ))}
                             </div>
-                            {/* <div className="flex gap-2 mb-2">
-                                <input
-                                    type="text"
-                                    value={newEffect}
-                                    onChange={e => setNewEffect(e.target.value)}
-                                    placeholder="Enter new effect"
-                                    className="flex-1 p-2 border border-gray-300 rounded"
-                                />
-                                <button
-                                    onClick={addHitEffect}
-                                    className="px-4 py-2 bg-blue-400 text-white rounded"
-                                >
-                                    + Add Effect
-                                </button>
-                            </div> */}
                             <button
                                 onClick={addHitEffect}
                                 className="w-full p-2 sm:p-3 border-2 border-dashed border-gray-400 rounded-lg text-gray-600 hover:border-gray-600 hover:text-black text-sm sm:text-base"
@@ -257,7 +302,7 @@ const addHitEffect = async (data) => {
                 <div className="p-4 sm:p-6 pt-0">
                     <button
                         onClick={handleSave}
-                        className="w-full py-3 sm:py-4 bg-custom-lightgradient text-ourblack font-bold rounded-lg transition-all text-sm sm:text-base  border-1 border-ourblack"
+                        className="w-full py-3 sm:py-4 bg-custom-lightgradient text-ourblack font-bold rounded-lg transition-all text-sm sm:text-base border-1 border-ourblack"
                     >
                         Save
                     </button>
@@ -267,4 +312,4 @@ const addHitEffect = async (data) => {
     );
 }
 
-export default SettingPopup
+export default SettingPopup;
