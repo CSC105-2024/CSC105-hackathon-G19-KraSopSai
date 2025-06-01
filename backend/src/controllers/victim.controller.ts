@@ -1,6 +1,7 @@
 import type {Context} from "hono";
 import { VictimModel } from "../models/victim.models.ts"; 
 
+
 type VictimType = {
     id : number,
      name : string,
@@ -16,6 +17,7 @@ type createVictim = {
 
 export const VictimController = {
     createVictim : async (c: Context) => {
+        console.log("createVictim called with:", c.req.json());
         try {
         const body = await c.req.json();
 		if (!body) {

@@ -136,8 +136,8 @@ function SettingPopup({ isOpen, onClose, victimId, onSave }) {
         const data = {
             name,
             reason,
-            hitEffects,
-            image: characterImage,
+            // hitEffects,
+            // image: characterImage,
         };
         onSave?.(data);
         onClose();

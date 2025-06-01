@@ -21,13 +21,18 @@ type createVictim = {
 export const VictimModel = {
 
   createVictim : async (victim : createVictim) => {
+    console.log("victim", victim);
+
      try {
+      
       const newVictim = await db.victim.create({
         data : {
             name : victim.name,
             reason : victim.reason,
-            hp : victim.hp,
-            userId : victim.userId
+            hp: 1,
+            userId : victim.userId,
+            //hp : victim.hp,
+            //userId : victim.userId
         }
      });
      return newVictim;

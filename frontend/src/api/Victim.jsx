@@ -10,7 +10,7 @@ const Axios = axios.create({
 });
 
 export const createVictimAPI = async (data) => {
-    console.log("Creating job with data:", data);
+    console.log("xoxo Creating job with data:", data);
   try {
     const response = await Axios.post("/victim", data);
     return {
@@ -59,7 +59,7 @@ export const deleteVictimAPI = async (id) => {
 }
 
 export const getVictimbyUserId = async (id) => {
-    console.log("Creating job with data:", data);
+    // console.log("Creating job with data:", data);
   try {
     const response = await Axios.get(`/victim/UserId/${id}`);
     return {

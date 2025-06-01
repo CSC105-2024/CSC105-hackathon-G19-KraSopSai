@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Axios } from '../utils/axiosInstance.js'
 import SettingPopup from '../components/SettingPopup.jsx'
+import { createVictimAPI, getVictimbyUserId } from '../api/Victim.jsx';
 
 function UserDetail() {
   const navigate = useNavigate();
@@ -10,6 +11,7 @@ function UserDetail() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
+  const [hateList, setHateList] = useState([]);
 
   // Get user data from localStorage on component mount
   useEffect(() => {
@@ -20,48 +22,71 @@ function UserDetail() {
         setUser(parsedUser);
       } catch (error) {
         console.error('Error parsing user data:', error);
-        // If user data is corrupted, redirect to auth
         navigate('/auth');
       }
     } else {
-      // No user data found, redirect to auth
+      console.warn('No user data found in localStorage');
       navigate('/auth');
     }
   }, [navigate]);
 
-  const handleOpenSetting = () => {
+  const handleOpenSetting = (victim = null) => {
+    setSavedData(victim);
     setIsSettingOpen(true);
   };
 
   const handleCloseSetting = () => {
     setIsSettingOpen(false);
+    setSavedData(null);
   };
 
-  const handleSaveData = (data) => {
+  const handleSaveData = async (data) => {
     setSavedData(data);
     console.log('Saved data:', data);
+
+    let _user = localStorage.getItem('user');
+    _user = JSON.parse(_user);
+    if (!_user || !_user.id) {
+      return;
+    }
+
+    let newData = data;
+    newData.userId = _user.id; // Ensure userId is set from localStorage
+    await createVictimAPI(newData);
+
+    // Refresh the hate list after saving
+    fetchHateList();
+  };
+
+  const handleForgive = async (victimId) => {
+    if (window.confirm('Are you sure you want to forgive this person?')) {
+      try {
+        // You'll need to implement this API call
+        // await deleteVictim(victimId);
+        console.log('Forgiving victim:', victimId);
+        // Refresh the list after forgiving
+        fetchHateList();
+      } catch (error) {
+        console.error('Error forgiving victim:', error);
+      }
+    }
   };
 
   // Logout function
   const handleLogout = async () => {
     setIsLoading(true);
     try {
-      // Call logout endpoint
       await Axios.post('/auth/logout');
     } catch (error) {
       console.error('Logout error:', error);
-      // Even if server request fails, we'll still clear local data
     } finally {
-      // Clear local storage
       localStorage.removeItem('user');
       localStorage.removeItem('auth_token');
       localStorage.removeItem('authToken');
       setIsLoading(false);
 
-      // Show success notification
       setShowLogoutSuccess(true);
 
-      // Hide notification and redirect after 2 seconds
       setTimeout(() => {
         setShowLogoutSuccess(false);
         navigate('/auth');
@@ -69,58 +94,32 @@ function UserDetail() {
     }
   };
 
-  const hateList = [
-    {
-      id: 1,
-      name: 'Hate Name 1',
-    },
-    {
-      id: 2,
-      name: 'Hate Name 2',
-    },
-    {
-      id: 3,
-      name: 'Hate Name 3',
-    },
-    {
-      id: 4,
-      name: 'Hate Name 4',
-    },
-    {
-      id: 5,
-      name: 'Hate Name 5',
-    },
-    {
-      id: 6,
-      name: 'Hate Name 6',
-    },
-    {
-      id: 7,
-      name: 'Hate Name 7',
-    },
-    {
-      id: 8,
-      name: 'Hate Name 8',
-    },
-    {
-      id: 9,
-      name: 'Hate Name 9',
-    },
-    {
-      id: 10,
-      name: 'Hate Name 10',
-    },
-    {
-      id: 11,
-      name: 'Hate Name 11',
-    },
-    {
-      id: 12,
-      name: 'Hate Name 12',
-    },
-  ];
+  // Memoize fetchHateList to prevent unnecessary re-renders
+  const fetchHateList = useCallback(async () => {
+    if (!user?.id) return;
+    
+    try {
+      const response = await getVictimbyUserId(user.id);
+      
+      if (response.success) {
+        setHateList(response.data?.data || []); // Adjust according to your API response structure
+        console.log(response.data);
+      } else {
+        setHateList([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch hate list:', error);
+      setHateList([]);
+    }
+  }, [user?.id]);
 
-  // Show loading or redirect if no user
+  // Fixed useEffect with proper dependencies
+  useEffect(() => {
+    if (user && user.id) {
+      fetchHateList();
+    }
+  }, [user, fetchHateList]);
+
   if (!user) {
     return (
         <div className="bg-[url('/images/background.jpg')] bg-cover bg-center h-screen flex items-center justify-center">
@@ -174,7 +173,11 @@ function UserDetail() {
             <div className='max-w-[342px] sm:max-w-[1069px] bg-lpink rounded-t-[20px] border-1 border-black flex items-center px-6 sm:px-10 mx-auto w-full flex-shrink-0'>
               <div className='flex items-center justify-between w-full py-4'>
                 <h3 className='text-md sm:text-2xl'>Hate List</h3>
-                <button className='w-8 h-8 sm:w-10 sm:h-10 rounded-[10px] bg-black flex items-center justify-center hover:bg-gray-800 transition-colors'>
+                <button 
+                  className='w-8 h-8 sm:w-10 sm:h-10 rounded-[10px] bg-black flex items-center justify-center hover:bg-gray-800 transition-colors'
+                  onClick={() => handleOpenSetting()}
+                  title="Add new victim"
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none">
                     <path d="M12 5V19M5 12H19" stroke="white" strokeWidth="2" strokeLinecap="round"/>
                   </svg>
@@ -183,26 +186,41 @@ function UserDetail() {
             </div>
 
             <div className='bg-white max-w-[342px] rounded-b-[20px] border-1 border-black flex flex-col sm:max-w-[1069px] flex-1 pt-2 sm:pt-4 px-4 mx-auto w-full overflow-y-auto min-h-0'>
-              {hateList.map((hate, index) => (
-                  <div key={`${hate.id}-${index}`} className="hate-item bg-yellow flex flex-col items-center justify-between sm:max-w-[1024px] w-full min-h-[98px] sm:min-h-[100px] border-1 border-black rounded-[20px] px-6 sm:px-10 my-2 mx-auto">
+              {hateList.length === 0 ? (
+                <div className="flex items-center justify-center h-32 text-gray-500">
+                  <p>No victims in your hate list yet.</p>
+                </div>
+              ) : (
+                hateList.map((victim, index) => (
+                  <div key={`${victim.id}-${index}`} className="hate-item bg-yellow flex flex-col items-center justify-between sm:max-w-[1024px] w-full min-h-[98px] sm:min-h-[100px] border-1 border-black rounded-[20px] px-6 sm:px-10 my-2 mx-auto">
                     <div className='flex items-start sm:items-center flex-col sm:flex-row sm:justify-between w-full h-full pt-2 sm:pt-0'>
-                      <p className='text-md sm:text-xl pb-2'>{hate.name}</p>
+                      <div className='flex flex-col'>
+                        <p className='text-md sm:text-xl pb-1 font-semibold'>{victim.name || 'Unnamed Victim'}</p>
+                        {victim.reason && (
+                          <p className='text-sm text-gray-600 pb-2'>Reason: {victim.reason}</p>
+                        )}
+                        {/* {victim.hp !== undefined && (
+                          <p className='text-sm text-red-600'>HP: {victim.hp}</p>
+                        )} */}
+                      </div>
                       <div className='flex items-center gap-2 w-full sm:w-50'>
                         <button
                             className='bg-lblue text-black rounded-[14px] px-4 py-2 border w-full hover:bg-blue-200 transition-colors'
-                            onClick={handleOpenSetting}
+                            onClick={() => handleOpenSetting(victim)}
                         >
                           Edit
                         </button>
                         <button
                             className='bg-dpink text-white rounded-[14px] px-4 py-2 border border-black w-full hover:bg-pink-600 transition-colors'
+                            onClick={() => handleForgive(victim.id)}
                         >
                           Forgive
                         </button>
                       </div>
                     </div>
                   </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         </div>
