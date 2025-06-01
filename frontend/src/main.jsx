@@ -28,7 +28,9 @@ const router = createBrowserRouter([
             },
             {
                 path: "/userDetail",
-                element: <ProtectedRoute><UserDetail/></ProtectedRoute>,
+                element: <ProtectedRoute>
+                    <UserDetail/>
+                </ProtectedRoute>
             },
             {
                 path: "/boxingRing",

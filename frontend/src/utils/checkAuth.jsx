@@ -9,7 +9,7 @@ const getCookie = (name) => {
 };
 
 const ProtectedRoute = ({ children }) => {
-    // Check for the auth_token cookie instead of localStorage
+
     const token = getCookie("auth_token");
 
     if (!token) {
