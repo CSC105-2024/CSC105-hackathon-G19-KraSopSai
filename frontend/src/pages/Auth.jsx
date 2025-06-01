@@ -57,8 +57,8 @@ export default function AuthPage() {
                 if (response.data.success) {
                     setSuccess("Login successful! Welcome back.");
 
+                    // Only store user data in localStorage, token is handled by cookies
                     localStorage.setItem('user', JSON.stringify(response.data.user));
-                    localStorage.setItem('token', response.data.token);
 
                     setFormData({username: "", email: "", password: ""});
 
@@ -97,6 +97,7 @@ export default function AuthPage() {
                 if (response.data.success) {
                     setSuccess("Registration successful! Redirecting to your profile...");
 
+                    // Only store user data in localStorage, token is handled by cookies
                     localStorage.setItem('user', JSON.stringify(response.data.user));
 
                     setFormData({username: "", email: "", password: ""});
@@ -133,13 +134,11 @@ export default function AuthPage() {
         try {
             await Axios.post('/auth/logout');
             localStorage.removeItem('user');
-            localStorage.removeItem('auth_token');
             navigate('/auth');
         } catch (error) {
             console.error('Logout error:', error);
             // Even if logout fails on server, clear local data
             localStorage.removeItem('user');
-            localStorage.removeItem('auth_token');
             navigate('/auth');
         }
     };

@@ -43,7 +43,7 @@ const FuneralPopup = ({
                         <p className="text-sm font-rye">Die: {getCurrentDate()}</p>
                     </div>
 
-                    <div className="bg-gray-100 p-6">
+                    <div className="bg-[url('/images/funeral.jpg')] bg-cover bg-center p-6">
 
                         <div className="flex justify-center mb-6">
                             <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-black bg-gray-300">
@@ -67,7 +67,7 @@ const FuneralPopup = ({
                         </div>
 
                         <div className="mb-6">
-                            <div className="bg-white border-2 border-black rounded-lg p-4 relative">
+                            <div className="bg-white border-2 border-black rounded-lg p-2 relative">
                                 <p className="text-black text-sm font-medium text-center">
                                     This guy death now, but you have a chance to...
                                 </p>

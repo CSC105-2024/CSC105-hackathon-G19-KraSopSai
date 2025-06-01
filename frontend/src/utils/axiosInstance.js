@@ -12,12 +12,8 @@ const Axios = axios.create({
 // Request interceptor
 Axios.interceptors.request.use(
 	(config) => {
-		// Since you're using cookies, you don't need the Authorization header
-		// But keep this if you want to support both methods
-		const token = localStorage.getItem('auth_token');
-		if (token) {
-			config.headers.Authorization = `Bearer ${token}`;
-		}
+		// Cookies are sent automatically with withCredentials: true
+		// No need to manually add Authorization headers
 		return config;
 	},
 	(error) => {
@@ -40,9 +36,8 @@ Axios.interceptors.response.use(
 			const status = error.response.status;
 
 			if (status === 401) {
-				// Clear user data and redirect to login
+				// Clear user data only (cookies are handled by server)
 				localStorage.removeItem('user');
-				localStorage.removeItem('auth_token');
 
 				// Only redirect if not already on auth page
 				if (!window.location.pathname.includes('/auth')) {
