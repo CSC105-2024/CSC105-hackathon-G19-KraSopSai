@@ -22,10 +22,6 @@ export const VictimModel = {
     }
   },
 
-  getAllVictim: async () => {
-    return await db.victim.findMany();
-  },
-
   getVictimByUserId: async (id: number) => {
     return await db.victim.findMany({
       where: { userId: id },

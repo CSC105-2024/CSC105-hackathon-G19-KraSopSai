@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Axios } from '../utils/axiosInstance.js'
 import SettingPopup from '../components/SettingPopup.jsx'
-import { createVictimAPI, getMyVictims } from '../api/Victim.jsx';
+import { createVictimAPI, getMyVictims } from '../api/victim.js';
 
 function UserDetail() {
   const navigate = useNavigate();

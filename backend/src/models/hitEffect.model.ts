@@ -23,11 +23,6 @@ export const createHitEffect = async (
   return newHitEffect;
 };
 
-export const getAllHitEffects = async () => {
-  const allHitEffect = await db.hitEffect.findMany();
-  return allHitEffect;
-};
-
 export const getMyHitEffects = async (userId: number) => {
   return await db.hitEffect.findMany({
     where: { victim: { userId } },

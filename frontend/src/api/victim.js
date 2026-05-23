@@ -1,13 +1,4 @@
-import axios from 'axios';
-
-const Axios = axios.create({
-	baseURL: 'http://localhost:3000',
-	withCredentials: true, // This is important for cookies
-	headers: {
-		'Content-Type': 'application/json',
-	},
-	timeout: 10000, // 10 second timeout
-});
+import { Axios } from '../utils/axiosInstance.js';
 
 export const createVictimAPI = async (data) => {
     console.log("xoxo Creating job with data:", data);

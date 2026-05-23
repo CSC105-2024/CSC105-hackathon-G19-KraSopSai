@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CustomCursorClick } from '../components/CustomCursorClick';
 import { CustomCursorImage } from '../components/CustomCursorImage';
 import { Link , useSearchParams,useNavigate } from "react-router-dom";
-import { getVictimbyId } from '../api/Victim';
+import { getVictimbyId } from '../api/victim.js';
 
 const BoxingRing = () => {
 

@@ -1,3 +1,5 @@
+// NOTE: this page currently calls Axios directly. The canonical auth layer is
+// `../api/authService.js` (see Phase C spec) — consolidate when convenient.
 import React, {useState} from "react";
 import {NavLink, useNavigate} from "react-router-dom";
 import { EyeOff, Eye } from 'lucide-react';
