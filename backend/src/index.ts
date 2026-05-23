@@ -23,15 +23,14 @@ app.get('/', (c) => {
 // Connect main router directly to root (removed '/api' prefix)
 app.route('/', mainRouter);
 
-// Error handling for uncaught exceptions
+// Error handling for uncaught exceptions — log only, do not exit.
+// External process manager (PM2/Docker/etc.) handles real crashes.
 process.on('uncaughtException', (error) => {
 	console.error('Uncaught Exception:', error);
-	process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
 	console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-	process.exit(1);
 });
 
 // Database connection

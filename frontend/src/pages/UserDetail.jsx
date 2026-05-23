@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Axios } from '../utils/axiosInstance.js'
 import SettingPopup from '../components/SettingPopup.jsx'
-import { createVictimAPI, getVictimbyUserId } from '../api/Victim.jsx';
+import { createVictimAPI, getMyVictims } from '../api/Victim.jsx';
 
 function UserDetail() {
   const navigate = useNavigate();
@@ -99,7 +99,7 @@ function UserDetail() {
     if (!user?.id) return;
     
     try {
-      const response = await getVictimbyUserId(user.id);
+      const response = await getMyVictims();
       
       if (response.success) {
         setHateList(response.data?.data || []); // Adjust according to your API response structure

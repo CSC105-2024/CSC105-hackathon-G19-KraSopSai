@@ -28,6 +28,12 @@ export const getAllHitEffects = async () => {
   return allHitEffect;
 };
 
+export const getMyHitEffects = async (userId: number) => {
+  return await db.hitEffect.findMany({
+    where: { victim: { userId } },
+  });
+};
+
 export const getHitEffectById = async (id: number) => {
   const hitEffectId = await db.hitEffect.findUnique({
     where: {

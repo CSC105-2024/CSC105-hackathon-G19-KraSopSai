@@ -1,9 +1,11 @@
 import type { Context, Next } from "hono";
 import { sign, verify } from "hono/jwt";
 import { getCookie, setCookie } from "hono/cookie";
-import { db } from "../index.js";
+import { db } from "../index.ts";
 
-export const JWT_SECRET = process.env.JWT_SECRET || "jwt-secret-key";
+const secret = process.env.JWT_SECRET;
+if (!secret) throw new Error("JWT_SECRET required");
+export const JWT_SECRET = secret;
 export const COOKIE_NAME = "auth_token";
 
 const cookieOptions = {

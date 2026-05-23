@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 import { hitEffectRouter } from "./hitEffect.route.ts";
 import VictimRouter from "./victim.route.ts";
-import auth from "./auth.route.js";
+import auth from "./auth.route.ts";
 
 const mainRouter = new Hono();
 

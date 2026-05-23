@@ -33,3 +33,18 @@ export interface JWTPayload {
     username: string;
     exp: number;
 }
+
+export interface VictimType {
+    id: number;
+    name: string;
+    reason: string;
+    hp: number;
+    userId: number;
+}
+
+export interface CreateVictimInput {
+    name: string;
+    reason: string;
+    hp: number;
+    userId: number;
+}

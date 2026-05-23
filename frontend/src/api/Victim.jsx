@@ -58,10 +58,9 @@ export const deleteVictimAPI = async (id) => {
   }
 }
 
-export const getVictimbyUserId = async (id) => {
-    // console.log("Creating job with data:", data);
+export const getMyVictims = async () => {
   try {
-    const response = await Axios.get(`/victim/UserId/${id}`);
+    const response = await Axios.get(`/victim`);
     return {
       success: true,
       data: response.data
@@ -77,7 +76,7 @@ export const getVictimbyUserId = async (id) => {
 
 export const getVictimbyId = async (id) => {
   try {
-    const response = await Axios.get(`/victim/getbyid/${id}`);
+    const response = await Axios.get(`/victim/${id}`);
     return {
       success: true,
       data: response.data
