@@ -76,7 +76,6 @@ export const getVictimbyUserId = async (id) => {
 }
 
 export const getVictimbyId = async (id) => {
-    console.log("Creating job with data:", data);
   try {
     const response = await Axios.get(`/victim/getbyid/${id}`);
     return {

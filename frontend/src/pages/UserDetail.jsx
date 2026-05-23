@@ -194,7 +194,10 @@ function UserDetail() {
                 hateList.map((victim, index) => (
                   <div key={`${victim.id}-${index}`} className="hate-item bg-yellow flex flex-col items-center justify-between sm:max-w-[1024px] w-full min-h-[98px] sm:min-h-[100px] border-1 border-black rounded-[20px] px-6 sm:px-10 my-2 mx-auto">
                     <div className='flex items-start sm:items-center flex-col sm:flex-row sm:justify-between w-full h-full pt-2 sm:pt-0'>
-                      <div className='flex flex-col'>
+                      <div
+                        className='flex flex-col cursor-pointer hover:opacity-80 transition-opacity'
+                        onClick={() => navigate(`/boxingRing?id=${victim.id}`)}
+                      >
                         <p className='text-md sm:text-xl pb-1 font-semibold'>{victim.name || 'Unnamed Victim'}</p>
                         {victim.reason && (
                           <p className='text-sm text-gray-600 pb-2'>Reason: {victim.reason}</p>

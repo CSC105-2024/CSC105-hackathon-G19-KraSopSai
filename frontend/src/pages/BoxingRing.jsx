@@ -24,8 +24,8 @@ const BoxingRing = () => {
       try {
         const result = await getVictimbyId(Id);
         
-        if (result.response.success) {
-          setVictim(result.response.data);
+        if (result.success) {
+          setVictim(result.data);
         } else {
           setError('Failed to fetch victim data');
         }
@@ -45,6 +45,8 @@ const BoxingRing = () => {
     reason : "bruh",
     hp : 300
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [isClicked, setIsClicked] = useState(false);
   const BG = [
     "./images/BG-sun.jpg",
