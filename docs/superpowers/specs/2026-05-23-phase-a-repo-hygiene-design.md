@@ -106,6 +106,31 @@ Hard delete. Remove these lines from `frontend/src/main.jsx`:
 
 Line 8: `import UserDetail from './pages/userDetail.jsx';` → `import UserDetail from './pages/UserDetail.jsx';` (capital `U`). Actual filename per `ls` output is `UserDetail.jsx`.
 
+### 7. `frontend/.gitignore` — add `.env` block (new)
+
+Frontend `.gitignore` currently does not list `.env`. Backend gitignore does. Add to `frontend/.gitignore`:
+
+```
+# env
+.env
+.env.production
+.env.local
+```
+
+Mirrors backend's pattern. Prevents accidental commit of `VITE_*` secrets in future.
+
+### 8. Lockfile migration — npm → pnpm (new)
+
+`package.json` in both `backend/` and `frontend/` pin `packageManager: pnpm@10.8.1+...` but both dirs currently ship `package-lock.json` (npm output) alongside generated `pnpm-lock.yaml`. Mixing creates divergence — installer chosen at random by contributor decides which lockfile wins.
+
+Action:
+- Delete `backend/package-lock.json`
+- Delete `frontend/package-lock.json`
+- Commit `backend/pnpm-lock.yaml` (generated this session)
+- Commit `frontend/pnpm-lock.yaml` (generated this session)
+
+README's setup steps already use `pnpm`. No code change.
+
 ---
 
 ## Out of scope, left untouched
@@ -114,6 +139,20 @@ Line 8: `import UserDetail from './pages/userDetail.jsx';` → `import UserDetai
 - `process.exit(1)` on uncaughtException in `backend/src/index.ts` — deferred to Phase B.
 - Mixed `.ts`/`.js` import extensions in route files — deferred to Phase B.
 - Empty `backend/README.md` and `frontend/README.md` — left as-is; root README is single source of truth.
+
+## Known issues deferred to Phase B / C (discovered during Phase A integration test)
+
+These are real bugs caught while verifying the JWT fix. NOT fixed in Phase A. Document here so they get picked up by Phase B/C brainstorm.
+
+1. **Victim creation broken** — `POST /victim` returns Prisma error: `userId: undefined`. Controller does not extract `userId` from authenticated context (`c.get('user')`); model expects it as a required relation. Whole "add victim" flow non-functional from frontend.
+2. **`hp` value override** — sending `{hp: 100}` results in `hp: 1` stored. Some default or override in `victim.models.ts` ignoring input. (Phase B — backend model audit.)
+3. **Duplicate axios instance** — `frontend/src/api/Victim.jsx` declares its own `axios.create({baseURL: 'http://localhost:3000', ...})` instead of importing the shared `Axios` from `utils/axiosInstance.js`. Bypasses request/response interceptors (no 401 auto-redirect, no error logging). (Phase C.)
+4. **Hardcoded `localhost:3000` in axios baseURL** — both `frontend/src/utils/axiosInstance.js:4` and `frontend/src/api/Victim.jsx:4` hardcode the URL instead of reading `import.meta.env.VITE_API_URL`. `VITE_API_URL` in `.env` is dead code until this is wired. (Phase C.)
+5. **`.js` vs `.ts` import suffix mismatch** — `backend/src/routes/index.route.ts` imports `auth.route.js` while sibling routes use `.ts` extensions. Works under `tsx watch` but inconsistent and may break in different build configs. (Phase B.)
+
+## Phase A change log (during implementation)
+
+- **2026-05-23 14:18** — added **step 0** to implementation order: fix JWT algorithm mismatch in `backend/src/middlewares/auth.middlewares.ts`. Hono 4.12.22 (resolved from `^4.7.10`) requires explicit `alg` parameter on `sign()` and `verify()` — old calls returned 401 on every protected route. Two-line edit: `sign(..., JWT_SECRET, 'HS256')` and `verify(token, JWT_SECRET, 'HS256')`. Verified post-fix: login + `/auth/profile` both return 200. User approved scope add mid-implementation.
 
 ---
 
@@ -147,15 +186,19 @@ Acceptance: all 7 pass.
 
 ## Implementation order (for the plan)
 
+0. **[DONE 2026-05-23]** Fix JWT algorithm in `backend/src/middlewares/auth.middlewares.ts` — add `'HS256'` 3rd arg to `sign()` (line 24) and `verify()` (line 44). Unblocks all protected routes.
 1. Write `backend/.env.example`
 2. Write `frontend/.env.example`
-3. Delete `frontend/src/pages/TestComponent.jsx`
-4. Edit `frontend/src/main.jsx` — remove TestComponent import + route, fix UserDetail case
-5. Edit `backend/package.json` — drop `bcryptjs`
-6. Run `pnpm install` in `backend/` to refresh lockfile
-7. Rewrite root `README.md`
-8. Manual verification per checklist above
-9. Commit as single `chore: repo hygiene (phase A)` commit, or split per file group if reviewer prefers
+3. Edit `frontend/.gitignore` — add `.env`, `.env.production`, `.env.local`
+4. Delete `backend/package-lock.json` + `frontend/package-lock.json` (npm leftovers)
+5. Stage `backend/pnpm-lock.yaml` + `frontend/pnpm-lock.yaml`
+6. Delete `frontend/src/pages/TestComponent.jsx`
+7. Edit `frontend/src/main.jsx` — remove TestComponent import + route, fix UserDetail case
+8. Edit `backend/package.json` — drop `bcryptjs`
+9. Run `pnpm install` in `backend/` to refresh lockfile
+10. Rewrite root `README.md`
+11. Manual verification per checklist above
+12. Commit as single `chore: repo hygiene (phase A)` commit, or split per file group if reviewer prefers
 
 ---
 
