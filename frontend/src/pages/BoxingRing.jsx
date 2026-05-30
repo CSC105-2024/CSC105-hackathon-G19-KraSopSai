@@ -109,12 +109,7 @@ const BoxingRing = () => {
   const [currentFace, setCurrentFace] = useState(Face[0]);
   const [currentBG,setcurrentBG] = useState(BG[0]);
   const [face,setface] = useState('./images/blood0.PNG')
-  const [popupMessage, setPopupMessage] = useState([{
-    id:Number,
-    msg:String,
-    x:Number,
-    y:Number
-  }]);
+  const [popupMessage, setPopupMessage] = useState([]);
   const [weaponopen,setweaponopen] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [showPopup, setShowPopup] = useState(false);
@@ -181,27 +176,27 @@ const BoxingRing = () => {
     const randomMessage = messages.length
       ? messages[Math.floor(Math.random() * messages.length)]
       : '';
-    const rect = e.currentTarget.getBoundingClientRect();
-    const randomX = Math.random() * (window.innerWidth);
-    const randomY = Math.random()*300 +350;
 
-     const newPopup = {
-      id: Date.now() + Math.random(), // Unique ID
-      msg: randomMessage,
-      x: randomX,
-      y: randomY
-    };
- 
-    if(popupMessage.length > 20){
-      popupMessage.shift();
-      setPopupMessage(prev => [...prev, newPopup]);
-    }else{
-      setPopupMessage(prev => [...prev, newPopup]);
+    if (randomMessage) {
+      const randomX = Math.random() * (window.innerWidth);
+      const randomY = Math.random()*300 +350;
+
+      const newPopup = {
+        id: Date.now() + Math.random(), // Unique ID
+        msg: randomMessage,
+        x: randomX,
+        y: randomY
+      };
+
+      setPopupMessage(prev => {
+        const next = prev.length > 20 ? prev.slice(1) : prev;
+        return [...next, newPopup];
+      });
+
+      setTimeout(() => {
+        setPopupMessage(prev => prev.filter(popup => popup.id !== newPopup.id));
+      }, 5000);
     }
-
-    setTimeout(() => {
-      setPopupMessage(prev => prev.filter(popup => popup.id !== newPopup.id));
-    }, 5000);
 
     setTimeout(() => {
       setIsClicked(false)
@@ -257,6 +252,10 @@ const BoxingRing = () => {
       const savedImage = localStorage.getItem(`victim_image_${data.id}`);
       setVictimImage(savedImage);
       if (savedImage) setCurrentFace(savedImage);
+      // Refresh popup messages with the (possibly edited) hit effects
+      const he = await getMyHitEffects();
+      const all = he?.data?.data ?? [];
+      setmessage(all.filter((eff) => eff.victimId === data.id).map((eff) => eff.title));
     }
   };
 
