@@ -14,9 +14,15 @@ function SettingPopup({ isOpen, onClose, victim, onSave }) {
     const [editValue, setEditValue] = useState('');
     const [newEffect, setNewEffect] = useState('');
 
+    // Create mode = no victim id yet. Hit Effect + Image tabs need an id, so
+    // they only show in edit mode. Same UI either way.
+    const isCreate = !victim?.id;
+    const tabs = isCreate ? ['Detail'] : ['Detail', 'Hit Effect', 'Image'];
+
     // Prefill name/reason + load image from localStorage when popup opens for a victim
     useEffect(() => {
         if (!isOpen) return;
+        setActiveTab('Detail');
         setName(victim?.name || '');
         setReason(victim?.reason || '');
         const savedImage = victim?.id
@@ -168,7 +174,7 @@ function SettingPopup({ isOpen, onClose, victim, onSave }) {
             <div className="bg-ourwhite rounded-2xl w-full max-w-xs sm:max-w-md lg:max-w-lg shadow-2xl max-h-[95vh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4">
-                    <h2 className="text-xl sm:text-2xl font-bold text-black">Setting</h2>
+                    <h2 className="text-xl sm:text-2xl font-bold text-black">{isCreate ? 'Create Victim' : 'Edit Victim'}</h2>
                     <button
                         onClick={onClose}
                         className="text-black hover:text-gray-600 text-xl sm:text-2xl font-bold p-1"
@@ -180,7 +186,7 @@ function SettingPopup({ isOpen, onClose, victim, onSave }) {
                 {/* Tabs */}
                 <div className="px-4 sm:px-6">
                     <div className="flex bg-ourwhite rounded-lg p-1">
-                        {['Detail', 'Hit Effect', 'Image'].map((tab) => (
+                        {tabs.map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
