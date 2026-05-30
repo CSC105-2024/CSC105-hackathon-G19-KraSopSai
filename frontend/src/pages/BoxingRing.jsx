@@ -7,6 +7,9 @@ import { getMyHitEffects } from '../api/hitEffectAPI';
 import SettingPopup from '../components/SettingPopup.jsx';
 import FuneralPopup from '../components/FuneralPopup.jsx';
 
+// Default per-weapon damage (weaponId -> { normal, crit }). Editable, persisted to localStorage.
+const DEFAULT_DAMAGE = { 1: { normal: 1, crit: 10 }, 2: { normal: 2, crit: 15 } };
+
 const BoxingRing = () => {
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -121,6 +124,24 @@ const BoxingRing = () => {
       EffectCrit:"./images/katanacrit.PNG"}
   ] 
   const [weapon, setWeapon] = useState(weapons[0].id);
+  const [damageOpen, setDamageOpen] = useState(false);
+  const [weaponDamage, setWeaponDamage] = useState(() => {
+    try {
+      const saved = localStorage.getItem('weapon_damage');
+      return saved ? { ...DEFAULT_DAMAGE, ...JSON.parse(saved) } : DEFAULT_DAMAGE;
+    } catch {
+      return DEFAULT_DAMAGE;
+    }
+  });
+
+  const updateDamage = (field, value) => {
+    setWeaponDamage((prev) => {
+      const cur = prev[weapon] || DEFAULT_DAMAGE[weapon] || { normal: 1, crit: 10 };
+      const next = { ...prev, [weapon]: { ...cur, [field]: Math.max(0, Number(value) || 0) } };
+      localStorage.setItem('weapon_damage', JSON.stringify(next));
+      return next;
+    });
+  };
 
   
 
@@ -169,12 +190,13 @@ const BoxingRing = () => {
     }, 200);
 
     setShowPopup(true);
+    const dmg = weaponDamage[weapon] || DEFAULT_DAMAGE[weapon] || { normal: 1, crit: 10 };
     const crit = Math.round(Math.random()*10)
     if(crit <= 1){
-      setHp(prev => Math.max(0, prev - 10));
+      setHp(prev => Math.max(0, prev - dmg.crit));
       sethitcrit(true);
     }else{
-      setHp(prev => Math.max(0, prev - 1));
+      setHp(prev => Math.max(0, prev - dmg.normal));
       sethitcrit(false);
     }
      setTimeout(() => {
@@ -272,11 +294,37 @@ const BoxingRing = () => {
           <button onClick={() => setIsEditOpen(true)} className="hidden md:block bg-custom-lightgradient text-black font-bold text-xl px-4 py-2 rounded hover:bg-white">
             Edit this guy
           </button>
+          <button onClick={() => setDamageOpen((v) => !v)} className="bg-yellow-500 text-black font-bold text-xl px-4 py-2 rounded hover:bg-yellow-400 transition-colors">
+            Damage
+          </button>
           <button onClick={() => navigate('/userDetail')} className="bg-gray-600 text-white text-xl px-4 py-2 rounded mr-3 hover:bg-gray-700">
             Back
           </button>
         </div>
       </div>
+
+      {damageOpen && (
+        <div className="absolute top-20 right-3 z-20 bg-black/80 text-white rounded-lg p-4 shadow-2xl w-64">
+          <h3 className="font-bold mb-3 text-lg">{currentWeapon?.name} damage</h3>
+          <label className="block text-sm mb-1">Normal hit</label>
+          <input
+            type="number"
+            min={0}
+            value={(weaponDamage[weapon] || DEFAULT_DAMAGE[weapon]).normal}
+            onChange={(e) => updateDamage('normal', e.target.value)}
+            className="w-full p-2 mb-3 rounded text-black"
+          />
+          <label className="block text-sm mb-1">Critical hit</label>
+          <input
+            type="number"
+            min={0}
+            value={(weaponDamage[weapon] || DEFAULT_DAMAGE[weapon]).crit}
+            onChange={(e) => updateDamage('crit', e.target.value)}
+            className="w-full p-2 rounded text-black"
+          />
+          <p className="text-xs text-gray-300 mt-3">Saved to this browser. Applies on next hit.</p>
+        </div>
+      )}
       <CustomCursorImage
        cursorImage = {currentWeapon.WeaponImage}
        cursorSize = {100}/>
