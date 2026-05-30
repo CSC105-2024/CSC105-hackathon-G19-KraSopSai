@@ -199,6 +199,38 @@ function UserDetail() {
             </div>
           </div>
 
+          {/* Stat cards */}
+          <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full max-w-[342px] sm:max-w-[1069px] mx-auto mb-4 flex-shrink-0'>
+            {(() => {
+              const has = hateList.length > 0;
+              const recent = has ? hateList.reduce((a, b) => (b.id > a.id ? b : a)) : null;
+              const mostDeath = has ? hateList.reduce((a, b) => ((b.deathCount || 0) > (a.deathCount || 0) ? b : a)) : null;
+              const mostHit = has ? hateList.reduce((a, b) => ((b.hitCount || 0) > (a.hitCount || 0) ? b : a)) : null;
+              return (
+                <>
+                  <div className='bg-white/90 border-1 border-black rounded-[20px] p-4 text-center shadow'>
+                    <p className='text-xs sm:text-sm font-bold text-gray-500 mb-1'>RECENT VICTIM</p>
+                    {recent
+                      ? <p className='text-lg sm:text-xl font-bold truncate'>{recent.name}</p>
+                      : <p className='text-sm sm:text-base font-semibold text-dpink'>Wow you forgive already</p>}
+                  </div>
+                  <div className='bg-white/90 border-1 border-black rounded-[20px] p-4 text-center shadow'>
+                    <p className='text-xs sm:text-sm font-bold text-gray-500 mb-1'>MOST DEATH</p>
+                    {mostDeath && (mostDeath.deathCount || 0) > 0
+                      ? <><p className='text-lg sm:text-xl font-bold truncate'>{mostDeath.name}</p><p className='text-xs sm:text-sm text-red-600'>{mostDeath.deathCount} deaths</p></>
+                      : <p className='text-sm sm:text-base font-semibold text-gray-400'>No deaths yet</p>}
+                  </div>
+                  <div className='bg-white/90 border-1 border-black rounded-[20px] p-4 text-center shadow'>
+                    <p className='text-xs sm:text-sm font-bold text-gray-500 mb-1'>MOST HIT GOT</p>
+                    {mostHit && (mostHit.hitCount || 0) > 0
+                      ? <><p className='text-lg sm:text-xl font-bold truncate'>{mostHit.name}</p><p className='text-xs sm:text-sm text-dblue'>{mostHit.hitCount} hits</p></>
+                      : <p className='text-sm sm:text-base font-semibold text-gray-400'>No hits yet</p>}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+
           <div className='flex flex-col flex-1 min-h-0 max-h-full'>
             <div className='max-w-[342px] sm:max-w-[1069px] bg-lpink rounded-t-[20px] border-1 border-black flex items-center px-6 sm:px-10 mx-auto w-full flex-shrink-0'>
               <div className='flex items-center justify-between w-full py-4'>
