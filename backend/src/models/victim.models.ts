@@ -55,8 +55,10 @@ export const VictimModel = {
   },
 
   deleteVictim: async (id: number) => {
-    return await db.victim.delete({
-      where: { id },
+    // Delete child hit effects first (no FK cascade in schema), then the victim.
+    return await db.$transaction(async (tx) => {
+      await tx.hitEffect.deleteMany({ where: { victimId: id } });
+      return tx.victim.delete({ where: { id } });
     });
   },
 
