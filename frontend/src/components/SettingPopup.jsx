@@ -8,6 +8,7 @@ function SettingPopup({ isOpen, onClose, victim, onSave }) {
     const [activeTab, setActiveTab] = useState('Detail');
     const [name, setName] = useState(victim?.name || '');
     const [reason, setReason] = useState(victim?.reason || '');
+    const [hp, setHp] = useState(victim?.hp ?? 100);
     const [hitEffects, setHitEffects] = useState([]); // Array of strings or objects
     const [characterImage, setCharacterImage] = useState(null);
     const [editingEffect, setEditingEffect] = useState(null);
@@ -25,6 +26,7 @@ function SettingPopup({ isOpen, onClose, victim, onSave }) {
         setActiveTab('Detail');
         setName(victim?.name || '');
         setReason(victim?.reason || '');
+        setHp(victim?.hp ?? 100);
         const savedImage = victim?.id
             ? localStorage.getItem(`victim_image_${victim.id}`)
             : null;
@@ -166,7 +168,7 @@ function SettingPopup({ isOpen, onClose, victim, onSave }) {
             id: victim?.id,
             name,
             reason,
-            hp: victim?.hp ?? 100,
+            hp: Number(hp) || 100,
         };
         // Persist image to localStorage keyed by victim id (only if we have an id).
         if (victim?.id) {
@@ -233,6 +235,16 @@ function SettingPopup({ isOpen, onClose, victim, onSave }) {
                                     onChange={(e) => setReason(e.target.value)}
                                     rows={3}
                                     className="w-full p-2 sm:p-3 bg-ourwhite border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lblue resize-none text-sm sm:text-base sm:rows-4"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-black font-bold mb-2 text-sm sm:text-base">Health (HP)</label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    value={hp}
+                                    onChange={(e) => setHp(e.target.value)}
+                                    className="bg-ourwhite w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lblue text-sm sm:text-base"
                                 />
                             </div>
                         </div>
