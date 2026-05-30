@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CustomCursorClick } from '../components/CustomCursorClick';
 import { CustomCursorImage } from '../components/CustomCursorImage';
 import { Link , useSearchParams,useNavigate } from "react-router-dom";
-import { getVictimbyId, EditVictimAPI } from '../api/victim.js';
+import { getVictimbyId, EditVictimAPI, addVictimStats } from '../api/victim.js';
 import { getMyHitEffects } from '../api/hitEffectAPI';
 import SettingPopup from '../components/SettingPopup.jsx';
 import FuneralPopup from '../components/FuneralPopup.jsx';
@@ -75,6 +75,23 @@ const BoxingRing = () => {
   const [victimImage, setVictimImage] = useState(null); // localStorage face override
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [showFuneral, setShowFuneral] = useState(false);
+  const hitsRef = useRef(0);          // hits accumulated this session, flushed in batches
+  const deathCountedRef = useRef(false); // guard so one death counts once
+
+  // Flush accumulated hits (+ optional deaths) to the backend stat counters.
+  const flushStats = async (extraDeaths = 0) => {
+    const hits = hitsRef.current;
+    hitsRef.current = 0;
+    if (Id && (hits > 0 || extraDeaths > 0)) {
+      await addVictimStats(Id, { hits, deaths: extraDeaths });
+    }
+  };
+
+  // Flush remaining hits when leaving the page.
+  useEffect(() => {
+    return () => { flushStats(0); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const BG = [
     "./images/BG-sun.jpg",
     "./images/dinner.jpg",
@@ -157,6 +174,7 @@ const BoxingRing = () => {
 
   const handleCircleClick = (e) => {
 
+    hitsRef.current += 1; // count this hit for stats
     setCurrentFace(victimImage || Face[3]);
     setIsClicked(true)
   
@@ -215,11 +233,16 @@ const BoxingRing = () => {
     }, 200);
   };
 
-  // Show funeral popup when HP reaches 0
+  // Show funeral popup when HP reaches 0; count one death (once per death).
   useEffect(() => {
-    if (hp <= 0) {
+    if (hp <= 0 && !deathCountedRef.current) {
+      deathCountedRef.current = true;
       setShowFuneral(true);
+      flushStats(1);
+    } else if (hp > 0) {
+      deathCountedRef.current = false;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hp]);
 
   // Save edits from the in-ring edit popup
@@ -297,7 +320,7 @@ const BoxingRing = () => {
           <button onClick={() => setDamageOpen((v) => !v)} className="bg-yellow-500 text-black font-bold text-xl px-4 py-2 rounded hover:bg-yellow-400 transition-colors">
             Damage
           </button>
-          <button onClick={() => navigate('/userDetail')} className="bg-gray-600 text-white text-xl px-4 py-2 rounded mr-3 hover:bg-gray-700">
+          <button onClick={async () => { await flushStats(0); navigate('/userDetail'); }} className="bg-gray-600 text-white text-xl px-4 py-2 rounded mr-3 hover:bg-gray-700">
             Back
           </button>
         </div>

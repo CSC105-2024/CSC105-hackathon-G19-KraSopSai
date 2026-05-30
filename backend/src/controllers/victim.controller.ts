@@ -113,4 +113,24 @@ export const VictimController = {
             );
         }
     },
+
+    addStats: async (c: Context) => {
+        try {
+            const id = Number(c.req.param('id'));
+            const body = await c.req.json();
+            const hits = Math.max(0, Number(body.hits) || 0);
+            const deaths = Math.max(0, Number(body.deaths) || 0);
+            const updated = await VictimModel.incrementStats(id, hits, deaths);
+            return c.json({
+                success: true,
+                data: updated,
+                msg: 'stats updated',
+            });
+        } catch (e) {
+            return c.json(
+                { success: false, data: null, msg: `Internal Server Error : ${e}` },
+                500
+            );
+        }
+    },
 };

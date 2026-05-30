@@ -49,6 +49,22 @@ export const deleteVictimAPI = async (id) => {
   }
 }
 
+export const addVictimStats = async (id, { hits = 0, deaths = 0 } = {}) => {
+  try {
+    const response = await Axios.post(`/victim/${id}/stats`, { hits, deaths });
+    return {
+      success: true,
+      data: response.data
+    }
+  } catch (e) {
+    console.log(e);
+    return {
+      success: false,
+      data: null
+    }
+  }
+}
+
 export const getMyVictims = async () => {
   try {
     const response = await Axios.get(`/victim`);

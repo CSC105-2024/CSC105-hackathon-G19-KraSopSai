@@ -10,6 +10,7 @@ VictimRouter.use("*", authMiddleware);
 VictimRouter.get("/",       VictimController.getMyVictims);
 VictimRouter.post("/",      VictimController.createVictim);
 VictimRouter.get("/:id",    requireOwnVictim, VictimController.getVictimbyID);
+VictimRouter.post("/:id/stats", requireOwnVictim, VictimController.addStats);
 VictimRouter.patch("/:id",  requireOwnVictim, VictimController.EditVictim);
 VictimRouter.delete("/:id", requireOwnVictim, VictimController.deleteVictim);
 

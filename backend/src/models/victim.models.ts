@@ -62,4 +62,14 @@ export const VictimModel = {
     });
   },
 
+  incrementStats: async (id: number, hits: number, deaths: number) => {
+    return await db.victim.update({
+      where: { id },
+      data: {
+        hitCount: { increment: hits },
+        deathCount: { increment: deaths },
+      },
+    });
+  },
+
 };

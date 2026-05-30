@@ -22,6 +22,8 @@ model Victim {
   name       String
   reason     String
   hp         Int
+  hitCount   Int         @default(0)
+  deathCount Int         @default(0)
   userId     Int
   hitEffects HitEffect[]
   user       User        @relation(fields: [userId], references: [id])
