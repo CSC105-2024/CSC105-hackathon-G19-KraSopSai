@@ -1,17 +1,48 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Upload } from 'lucide-react';
 import { Axios } from '../utils/axiosInstance';
-import { createHitEffect, editHitEffect, deleteHitEffect } from '../api/hitEffectAPI';
+import { createHitEffect, editHitEffect, deleteHitEffect, getMyHitEffects } from '../api/hitEffectAPI';
 
-function SettingPopup({ isOpen, onClose, victimId, onSave }) {
+function SettingPopup({ isOpen, onClose, victim, onSave }) {
+    const victimId = victim?.id;
     const [activeTab, setActiveTab] = useState('Detail');
-    const [name, setName] = useState('');
-    const [reason, setReason] = useState('');
+    const [name, setName] = useState(victim?.name || '');
+    const [reason, setReason] = useState(victim?.reason || '');
+    const [hp, setHp] = useState(victim?.hp ?? 100);
     const [hitEffects, setHitEffects] = useState([]); // Array of strings or objects
-    const [characterImage, setCharacterImage] = useState(victimId?.image || null);
+    const [characterImage, setCharacterImage] = useState(null);
     const [editingEffect, setEditingEffect] = useState(null);
     const [editValue, setEditValue] = useState('');
     const [newEffect, setNewEffect] = useState('');
+
+    // Create mode = no victim id yet. Hit Effect + Image tabs need an id, so
+    // they only show in edit mode. Same UI either way.
+    const isCreate = !victim?.id;
+    const tabs = isCreate ? ['Detail'] : ['Detail', 'Hit Effect', 'Image'];
+
+    // Prefill name/reason + load image from localStorage when popup opens for a victim
+    useEffect(() => {
+        if (!isOpen) return;
+        setActiveTab('Detail');
+        setName(victim?.name || '');
+        setReason(victim?.reason || '');
+        setHp(victim?.hp ?? 100);
+        const savedImage = victim?.id
+            ? localStorage.getItem(`victim_image_${victim.id}`)
+            : null;
+        setCharacterImage(savedImage);
+
+        // Load this victim's hit effects from the server (edit mode only)
+        if (victim?.id) {
+            (async () => {
+                const res = await getMyHitEffects();
+                const all = res?.data?.data ?? [];
+                setHitEffects(all.filter((eff) => eff.victimId === victim.id));
+            })();
+        } else {
+            setHitEffects([]);
+        }
+    }, [isOpen, victim?.id, victim?.name, victim?.reason]);
 
     if (!isOpen) {
         return null;
@@ -134,11 +165,19 @@ function SettingPopup({ isOpen, onClose, victimId, onSave }) {
 
     const handleSave = () => {
         const data = {
+            id: victim?.id,
             name,
             reason,
-            // hitEffects,
-            // image: characterImage,
+            hp: Number(hp) || 100,
         };
+        // Persist image to localStorage keyed by victim id (only if we have an id).
+        if (victim?.id) {
+            if (characterImage) {
+                localStorage.setItem(`victim_image_${victim.id}`, characterImage);
+            } else {
+                localStorage.removeItem(`victim_image_${victim.id}`);
+            }
+        }
         onSave?.(data);
         onClose();
     };
@@ -148,7 +187,7 @@ function SettingPopup({ isOpen, onClose, victimId, onSave }) {
             <div className="bg-ourwhite rounded-2xl w-full max-w-xs sm:max-w-md lg:max-w-lg shadow-2xl max-h-[95vh] overflow-y-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4">
-                    <h2 className="text-xl sm:text-2xl font-bold text-black">Setting</h2>
+                    <h2 className="text-xl sm:text-2xl font-bold text-black">{isCreate ? 'Create Victim' : 'Edit Victim'}</h2>
                     <button
                         onClick={onClose}
                         className="text-black hover:text-gray-600 text-xl sm:text-2xl font-bold p-1"
@@ -160,7 +199,7 @@ function SettingPopup({ isOpen, onClose, victimId, onSave }) {
                 {/* Tabs */}
                 <div className="px-4 sm:px-6">
                     <div className="flex bg-ourwhite rounded-lg p-1">
-                        {['Detail', 'Hit Effect', 'Image'].map((tab) => (
+                        {tabs.map((tab) => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -196,6 +235,16 @@ function SettingPopup({ isOpen, onClose, victimId, onSave }) {
                                     onChange={(e) => setReason(e.target.value)}
                                     rows={3}
                                     className="w-full p-2 sm:p-3 bg-ourwhite border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lblue resize-none text-sm sm:text-base sm:rows-4"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-black font-bold mb-2 text-sm sm:text-base">Health (HP)</label>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    value={hp}
+                                    onChange={(e) => setHp(e.target.value)}
+                                    className="bg-ourwhite w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-lblue text-sm sm:text-base"
                                 />
                             </div>
                         </div>
@@ -249,7 +298,7 @@ function SettingPopup({ isOpen, onClose, victimId, onSave }) {
                     {activeTab === 'Image' && (
                         <div className="bg-lblue rounded-lg p-3 sm:p-4">
                             <p className="text-center text-black font-medium mb-4 sm:mb-6 text-sm sm:text-base">
-                                *We don't save this Image for you*
+                                *Saved locally on this browser only*
                             </p>
                             <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                                 {/* Image Preview */}

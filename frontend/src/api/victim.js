@@ -1,13 +1,4 @@
-import axios from 'axios';
-
-const Axios = axios.create({
-	baseURL: 'http://localhost:3000',
-	withCredentials: true, // This is important for cookies
-	headers: {
-		'Content-Type': 'application/json',
-	},
-	timeout: 10000, // 10 second timeout
-});
+import { Axios } from '../utils/axiosInstance.js';
 
 export const createVictimAPI = async (data) => {
     console.log("xoxo Creating job with data:", data);
@@ -58,10 +49,25 @@ export const deleteVictimAPI = async (id) => {
   }
 }
 
-export const getVictimbyUserId = async (id) => {
-    // console.log("Creating job with data:", data);
+export const addVictimStats = async (id, { hits = 0, deaths = 0 } = {}) => {
   try {
-    const response = await Axios.get(`/victim/UserId/${id}`);
+    const response = await Axios.post(`/victim/${id}/stats`, { hits, deaths });
+    return {
+      success: true,
+      data: response.data
+    }
+  } catch (e) {
+    console.log(e);
+    return {
+      success: false,
+      data: null
+    }
+  }
+}
+
+export const getMyVictims = async () => {
+  try {
+    const response = await Axios.get(`/victim`);
     return {
       success: true,
       data: response.data
@@ -76,9 +82,8 @@ export const getVictimbyUserId = async (id) => {
 }
 
 export const getVictimbyId = async (id) => {
-    console.log("Creating job with data:", data);
   try {
-    const response = await Axios.get(`/victim/getbyid/${id}`);
+    const response = await Axios.get(`/victim/${id}`);
     return {
       success: true,
       data: response.data

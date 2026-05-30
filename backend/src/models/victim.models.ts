@@ -1,104 +1,75 @@
-import { error } from "console";
-import type { Victim } from "../generated/prisma/index.js";
 import { db } from "../index.ts";
-import { use } from "hono/jsx";
-
-type VictimType = {
-    id : number,
-    name : string,
-    reason : string,
-    hp : number,
-    userId : number
-}
-
-type createVictim = {
-    name : string,
-    reason : string,
-    hp : number,
-    userId : number
-}
+import type { CreateVictimInput } from "../types/type.ts";
 
 export const VictimModel = {
 
-  createVictim : async (victim : createVictim) => {
-    console.log("victim", victim);
-
-     try {
-      
+  createVictim: async (victim: CreateVictimInput) => {
+    try {
       const newVictim = await db.victim.create({
-        data : {
-            name : victim.name,
-            reason : victim.reason,
-            hp: 1,
-            userId : victim.userId,
-            //hp : victim.hp,
-            //userId : victim.userId
-        }
-     });
-     return newVictim;
-    } 
-    catch (error) {
-      if (error === 'P2003') {
-        throw new Error(
-          "Invalid reference: One or more related records don't exist");
+        data: {
+          name: victim.name,
+          reason: victim.reason,
+          hp: victim.hp,
+          userId: victim.userId,
+        },
+      });
+      return newVictim;
+    } catch (error: unknown) {
+      if (error instanceof Error && (error as { code?: string }).code === 'P2003') {
+        throw new Error("Invalid reference: One or more related records don't exist");
       }
       throw error;
     }
   },
-  
 
-  getAllVictim: async () => {
-    return await db.victim.findMany();
-  },
-  
   getVictimByUserId: async (id: number) => {
-    const Job = await db.victim.findMany({
-        where: {
-            userId: id,
-        },
+    return await db.victim.findMany({
+      where: { userId: id },
     });
-    return Job;
   },
 
   getVictimById: async (id: number) => {
-    const Job = await db.victim.findUnique({
-        where: {
-            id : id,
-        },
+    return await db.victim.findUnique({
+      where: { id },
     });
-    return Job;
   },
 
-updateVictim: async (id : number,victim : createVictim) => {
+  updateVictim: async (id: number, victim: CreateVictimInput) => {
     try {
       const upvictim = await db.victim.update({
-        where : {
-            id : id
+        where: { id },
+        data: {
+          name: victim.name,
+          reason: victim.reason,
+          hp: victim.hp,
+          userId: victim.userId,
         },
-        data : {
-            name : victim.name,
-            reason : victim.reason,
-            hp : victim.hp,
-            userId : victim.userId
-        }
-     });
-     return upvictim;
-    } 
-    catch (error) {
-      if (error === 'P2003') {
-        throw new Error(
-          "Invalid reference: One or more related records don't exist");
+      });
+      return upvictim;
+    } catch (error: unknown) {
+      if (error instanceof Error && (error as { code?: string }).code === 'P2003') {
+        throw new Error("Invalid reference: One or more related records don't exist");
       }
       throw error;
     }
   },
+
   deleteVictim: async (id: number) => {
-      const Job = await db.victim.delete({
-        where: {
-            id : id,
-        },
+    // Delete child hit effects first (no FK cascade in schema), then the victim.
+    return await db.$transaction(async (tx) => {
+      await tx.hitEffect.deleteMany({ where: { victimId: id } });
+      return tx.victim.delete({ where: { id } });
     });
-    return Job;
+  },
+
+  incrementStats: async (id: number, hits: number, deaths: number) => {
+    return await db.victim.update({
+      where: { id },
+      data: {
+        hitCount: { increment: hits },
+        deathCount: { increment: deaths },
+      },
+    });
   },
 
 };

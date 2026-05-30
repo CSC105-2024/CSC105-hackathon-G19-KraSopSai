@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE `victim` ADD COLUMN `deathCount` INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN `hitCount` INTEGER NOT NULL DEFAULT 0;

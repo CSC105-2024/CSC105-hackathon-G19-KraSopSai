@@ -5,13 +5,13 @@ import './index.css'
 import App from './App.jsx'
 import Home from './pages/Home.jsx';
 import Auth from './pages/Auth.jsx';
-import UserDetail from './pages/userDetail.jsx';
+import UserDetail from './pages/UserDetail.jsx';
 import BoxingRing from './pages/BoxingRing.jsx';
 import NotFoundPage from './pages/NotFoundPage.jsx';
-import TestComponent from './pages/TestComponent.jsx';
-import ProtectedRoute from "./utils/checkAuth.jsx";
+import ProtectedRoute from "./utils/ProtectedRoute.jsx";
 import FuneralPopup from "./components/FuneralPopup.jsx";
 import Forgive from "./components/Forgive.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 
 const router = createBrowserRouter([
     {
@@ -37,10 +37,6 @@ const router = createBrowserRouter([
                 element: <ProtectedRoute><BoxingRing/></ProtectedRoute>,
             },
             {
-                path: "/Test",
-                element: <TestComponent/>,
-            },
-            {
                 path: "/fu",
                 element: <FuneralPopup/>,
             },
@@ -58,6 +54,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')).render(
     <StrictMode>
-        <RouterProvider router={router}/>
+        <ErrorBoundary>
+            <RouterProvider router={router}/>
+        </ErrorBoundary>
     </StrictMode>,
 )

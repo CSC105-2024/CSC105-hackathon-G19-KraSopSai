@@ -1,8 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CustomCursorClick } from '../components/CustomCursorClick';
 import { CustomCursorImage } from '../components/CustomCursorImage';
 import { Link , useSearchParams,useNavigate } from "react-router-dom";
-import { getVictimbyId } from '../api/Victim';
+import { getVictimbyId, EditVictimAPI, addVictimStats } from '../api/victim.js';
+import { getMyHitEffects } from '../api/hitEffectAPI';
+import SettingPopup from '../components/SettingPopup.jsx';
+import FuneralPopup from '../components/FuneralPopup.jsx';
+
+// Default per-weapon damage (weaponId -> { normal, crit }). Editable, persisted to localStorage.
+const DEFAULT_DAMAGE = { 1: { normal: 1, crit: 10 }, 2: { normal: 2, crit: 15 } };
 
 const BoxingRing = () => {
 
@@ -24,8 +30,26 @@ const BoxingRing = () => {
       try {
         const result = await getVictimbyId(Id);
         
-        if (result.response.success) {
-          setVictim(result.response.data);
+        if (result.success) {
+          // Backend returns { success, data: victim, msg }; the API helper
+          // wraps that in another { success, data }, so unwrap twice.
+          const v = result.data?.data ?? result.data;
+          setVictim(v);
+          // Override default face with a localStorage image if user saved one.
+          if (v?.id) {
+            const savedImage = localStorage.getItem(`victim_image_${v.id}`);
+            if (savedImage) {
+              setVictimImage(savedImage);
+              setCurrentFace(savedImage);
+            }
+            // Load this victim's hit effects as popup messages
+            const he = await getMyHitEffects();
+            const all = he?.data?.data ?? [];
+            const titles = all
+              .filter((eff) => eff.victimId === v.id)
+              .map((eff) => eff.title);
+            setmessage(titles);
+          }
         } else {
           setError('Failed to fetch victim data');
         }
@@ -45,7 +69,29 @@ const BoxingRing = () => {
     reason : "bruh",
     hp : 300
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [isClicked, setIsClicked] = useState(false);
+  const [victimImage, setVictimImage] = useState(null); // localStorage face override
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [showFuneral, setShowFuneral] = useState(false);
+  const hitsRef = useRef(0);          // hits accumulated this session, flushed in batches
+  const deathCountedRef = useRef(false); // guard so one death counts once
+
+  // Flush accumulated hits (+ optional deaths) to the backend stat counters.
+  const flushStats = async (extraDeaths = 0) => {
+    const hits = hitsRef.current;
+    hitsRef.current = 0;
+    if (Id && (hits > 0 || extraDeaths > 0)) {
+      await addVictimStats(Id, { hits, deaths: extraDeaths });
+    }
+  };
+
+  // Flush remaining hits when leaving the page.
+  useEffect(() => {
+    return () => { flushStats(0); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const BG = [
     "./images/BG-sun.jpg",
     "./images/dinner.jpg",
@@ -63,12 +109,7 @@ const BoxingRing = () => {
   const [currentFace, setCurrentFace] = useState(Face[0]);
   const [currentBG,setcurrentBG] = useState(BG[0]);
   const [face,setface] = useState('./images/blood0.PNG')
-  const [popupMessage, setPopupMessage] = useState([{
-    id:Number,
-    msg:String,
-    x:Number,
-    y:Number
-  }]);
+  const [popupMessage, setPopupMessage] = useState([]);
   const [weaponopen,setweaponopen] = useState(false);
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
   const [showPopup, setShowPopup] = useState(false);
@@ -95,6 +136,24 @@ const BoxingRing = () => {
       EffectCrit:"./images/katanacrit.PNG"}
   ] 
   const [weapon, setWeapon] = useState(weapons[0].id);
+  const [damageOpen, setDamageOpen] = useState(false);
+  const [weaponDamage, setWeaponDamage] = useState(() => {
+    try {
+      const saved = localStorage.getItem('weapon_damage');
+      return saved ? { ...DEFAULT_DAMAGE, ...JSON.parse(saved) } : DEFAULT_DAMAGE;
+    } catch {
+      return DEFAULT_DAMAGE;
+    }
+  });
+
+  const updateDamage = (field, value) => {
+    setWeaponDamage((prev) => {
+      const cur = prev[weapon] || DEFAULT_DAMAGE[weapon] || { normal: 1, crit: 10 };
+      const next = { ...prev, [weapon]: { ...cur, [field]: Math.max(0, Number(value) || 0) } };
+      localStorage.setItem('weapon_damage', JSON.stringify(next));
+      return next;
+    });
+  };
 
   
 
@@ -110,59 +169,94 @@ const BoxingRing = () => {
 
   const handleCircleClick = (e) => {
 
-    setCurrentFace(Face[3]);
+    hitsRef.current += 1; // count this hit for stats
+    setCurrentFace(victimImage || Face[3]);
     setIsClicked(true)
   
-    const randomMessage = messages[Math.floor(Math.round(Math.random() * messages.length))];
-    const rect = e.currentTarget.getBoundingClientRect();
-    const randomX = Math.random() * (window.innerWidth);
-    const randomY = Math.random()*300 +350;
+    const randomMessage = messages.length
+      ? messages[Math.floor(Math.random() * messages.length)]
+      : '';
 
-     const newPopup = {
-      id: Date.now() + Math.random(), // Unique ID
-      msg: randomMessage,
-      x: randomX,
-      y: randomY
-    };
- 
-    if(popupMessage.length > 20){
-      popupMessage.shift();
-      setPopupMessage(prev => [...prev, newPopup]);
-    }else{
-      setPopupMessage(prev => [...prev, newPopup]);
+    if (randomMessage) {
+      const randomX = Math.random() * (window.innerWidth);
+      const randomY = Math.random()*300 +350;
+
+      const newPopup = {
+        id: Date.now() + Math.random(), // Unique ID
+        msg: randomMessage,
+        x: randomX,
+        y: randomY
+      };
+
+      setPopupMessage(prev => {
+        const next = prev.length > 20 ? prev.slice(1) : prev;
+        return [...next, newPopup];
+      });
+
+      setTimeout(() => {
+        setPopupMessage(prev => prev.filter(popup => popup.id !== newPopup.id));
+      }, 5000);
     }
-
-    setTimeout(() => {
-      setPopupMessage(prev => prev.filter(popup => popup.id !== newPopup.id));
-    }, 5000);
 
     setTimeout(() => {
       setIsClicked(false)
     }, 200);
 
     setShowPopup(true);
+    const dmg = weaponDamage[weapon] || DEFAULT_DAMAGE[weapon] || { normal: 1, crit: 10 };
     const crit = Math.round(Math.random()*10)
     if(crit <= 1){
-      setHp(prev => Math.max(0, prev - 10));
+      setHp(prev => Math.max(0, prev - dmg.crit));
       sethitcrit(true);
     }else{
-      setHp(prev => Math.max(0, prev - 1));
+      setHp(prev => Math.max(0, prev - dmg.normal));
       sethitcrit(false);
     }
      setTimeout(() => {
     if(healthPercentage > 60){
-      setCurrentFace(Face[0]);
+      setCurrentFace(victimImage || Face[0]);
       setcurrentBG(BG[0])
     }else if(healthPercentage > 30){
-      setCurrentFace(Face[1]);
+      setCurrentFace(victimImage || Face[1]);
       setcurrentBG(BG[1])
       setface('./images/blood2.PNG')
     }else{
-      setCurrentFace(Face[2]);
+      setCurrentFace(victimImage || Face[2]);
       setcurrentBG(BG[2])
       setface('./images/blood1.PNG')
     }
     }, 200);
+  };
+
+  // Show funeral popup when HP reaches 0; count one death (once per death).
+  useEffect(() => {
+    if (hp <= 0 && !deathCountedRef.current) {
+      deathCountedRef.current = true;
+      setShowFuneral(true);
+      flushStats(1);
+    } else if (hp > 0) {
+      deathCountedRef.current = false;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hp]);
+
+  // Save edits from the in-ring edit popup
+  const handleEditSave = async (data) => {
+    if (data.id) {
+      await EditVictimAPI(data.id, {
+        name: data.name,
+        reason: data.reason,
+        hp: data.hp ?? Victim?.hp ?? 100,
+      });
+      setVictim((prev) => ({ ...prev, name: data.name, reason: data.reason }));
+      const savedImage = localStorage.getItem(`victim_image_${data.id}`);
+      setVictimImage(savedImage);
+      if (savedImage) setCurrentFace(savedImage);
+      // Refresh popup messages with the (possibly edited) hit effects
+      const he = await getMyHitEffects();
+      const all = he?.data?.data ?? [];
+      setmessage(all.filter((eff) => eff.victimId === data.id).map((eff) => eff.title));
+    }
   };
 
   const handleWeaponChange = (e) => {
@@ -216,25 +310,53 @@ const BoxingRing = () => {
       </select>
     </div>
           </button>
-          <button className="md:hidden bg-custom-lightgradient text-black font-bold text-xl px-4 py-2 rounded hover:bg-white">
+          <button onClick={() => setIsEditOpen(true)} className="md:hidden bg-custom-lightgradient text-black font-bold text-xl px-4 py-2 rounded hover:bg-white">
             Edit
           </button>
-          <button className="hidden md:block bg-custom-lightgradient text-black font-bold text-xl px-4 py-2 rounded hover:bg-white">
+          <button onClick={() => setIsEditOpen(true)} className="hidden md:block bg-custom-lightgradient text-black font-bold text-xl px-4 py-2 rounded hover:bg-white">
             Edit this guy
           </button>
-          <button className="bg-gray-600 text-white text-xl px-4 py-2 rounded mr-3 hover:bg-gray-700">
+          <button onClick={() => setDamageOpen((v) => !v)} className="bg-yellow-500 text-black font-bold text-xl px-4 py-2 rounded hover:bg-yellow-400 transition-colors">
+            Damage
+          </button>
+          <button onClick={async () => { await flushStats(0); navigate('/userDetail'); }} className="bg-gray-600 text-white text-xl px-4 py-2 rounded mr-3 hover:bg-gray-700">
             Back
           </button>
         </div>
       </div>
-      <CustomCursorImage
-       cursorImage = {currentWeapon.WeaponImage} 
-       cursorSize = {100}/>
-      
+
+      {damageOpen && (
+        <div className="absolute top-20 right-3 z-20 bg-black/80 text-white rounded-lg p-4 shadow-2xl w-64">
+          <h3 className="font-bold mb-3 text-lg">{currentWeapon?.name} damage</h3>
+          <label className="block text-sm mb-1">Normal hit</label>
+          <input
+            type="number"
+            min={0}
+            value={(weaponDamage[weapon] || DEFAULT_DAMAGE[weapon]).normal}
+            onChange={(e) => updateDamage('normal', e.target.value)}
+            className="w-full p-2 mb-3 rounded text-black"
+          />
+          <label className="block text-sm mb-1">Critical hit</label>
+          <input
+            type="number"
+            min={0}
+            value={(weaponDamage[weapon] || DEFAULT_DAMAGE[weapon]).crit}
+            onChange={(e) => updateDamage('crit', e.target.value)}
+            className="w-full p-2 rounded text-black"
+          />
+          <p className="text-xs text-gray-300 mt-3">Saved to this browser. Applies on next hit.</p>
+        </div>
+      )}
+      {!isEditOpen && !showFuneral && (
+        <CustomCursorImage
+         cursorImage = {currentWeapon.WeaponImage}
+         cursorSize = {100}/>
+      )}
+
       <div>
       <div className="absolute top-50 left-1/2 transform -translate-x-1/2 text-white text-3xl font-bold text-center drop-shadow-lg shadow-black
       w-80 md:w-120">
-        <div className=' break-words mb-2'>Duck you ass hole</div>
+        <div className=' break-words mb-2'>{Victim?.name ?? ''}</div>
         <div className='bg-black border-2 border-black rounded-2xl shadow-2xl'>
           <div className={`h-10 rounded-2xl transition-all duration-300 ease-out ${getHealthColor()}`}
           style={{ width: `${healthPercentage}%` }}><div>{/*HP*/}</div>
@@ -276,6 +398,24 @@ const BoxingRing = () => {
       )}
     </div>
     </CustomCursorClick>
+
+    {isEditOpen && (
+      <SettingPopup
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        onSave={handleEditSave}
+        victim={Victim}
+      />
+    )}
+
+    {showFuneral && (
+      <FuneralPopup
+        isOpen={showFuneral}
+        onRevive={() => { setShowFuneral(false); setHp(maxhp); }}
+        onAccept={() => navigate('/userDetail')}
+        characterData={{ name: Victim?.name ?? 'Player', image: victimImage }}
+      />
+    )}
     </div>
   );
 };

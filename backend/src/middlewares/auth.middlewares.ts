@@ -1,9 +1,11 @@
 import type { Context, Next } from "hono";
 import { sign, verify } from "hono/jwt";
 import { getCookie, setCookie } from "hono/cookie";
-import { db } from "../index.js";
+import { db } from "../index.ts";
 
-export const JWT_SECRET = process.env.JWT_SECRET || "jwt-secret-key";
+const secret = process.env.JWT_SECRET;
+if (!secret) throw new Error("JWT_SECRET required");
+export const JWT_SECRET = secret;
 export const COOKIE_NAME = "auth_token";
 
 const cookieOptions = {
@@ -24,7 +26,7 @@ export const setAuthCookie = async (c: Context, payload: AuthPayload) => {
     const token = await sign({
         ...payload,
         exp: Math.floor(Date.now() / 1000) + cookieOptions.maxAge
-    }, JWT_SECRET);
+    }, JWT_SECRET, 'HS256');
 
     setCookie(c, COOKIE_NAME, token, cookieOptions);
     return token;
@@ -41,7 +43,7 @@ export const authMiddleware = async (c: Context, next: Next) => {
             return c.json({ error: "Authentication required" }, 401);
         }
 
-        const payload = await verify(token, JWT_SECRET);
+        const payload = await verify(token, JWT_SECRET, 'HS256');
         if (!payload?.id) {
             return c.json({ error: "Unauthorized" }, 401);
         }

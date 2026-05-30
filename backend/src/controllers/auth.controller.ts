@@ -1,12 +1,12 @@
 import type { Context } from "hono";
-import * as AuthModel from "../models/auth.models.js";
-import { setAuthCookie, clearAuthCookie } from "../middlewares/auth.middlewares.js";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
+import * as AuthModel from "../models/auth.models.ts";
+import { setAuthCookie, clearAuthCookie } from "../middlewares/auth.middlewares.ts";
+import { isValidEmail } from "../utils/validation.ts";
 
-const validateEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-
-const handleError = (c: Context, error: any, message: string, status = 500) => {
+const handleError = (c: Context, error: unknown, message: string, status: ContentfulStatusCode = 500) => {
     console.error(`${message}:`, error);
-    return c.json({ success: false, message: "Error occured" }, 500);
+    return c.json({ success: false, message }, status);
 };
 
 export const register = async (c: Context) => {
@@ -17,7 +17,7 @@ export const register = async (c: Context) => {
             return c.json({ success: false, message: "Username, email, and password are required" }, 400);
         }
 
-        if (!validateEmail(email)) {
+        if (!isValidEmail(email)) {
             return c.json({ success: false, message: "Please provide a valid email address" }, 400);
         }
 
@@ -40,7 +40,7 @@ export const login = async (c: Context) => {
             return c.json({ success: false, message: "Email and password are required" }, 400);
         }
 
-        if (!validateEmail(email)) {
+        if (!isValidEmail(email)) {
             return c.json({ success: false, message: "Please provide a valid email address" }, 400);
         }
 

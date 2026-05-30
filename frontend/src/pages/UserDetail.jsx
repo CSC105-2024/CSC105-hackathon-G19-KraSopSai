@@ -2,7 +2,11 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Axios } from '../utils/axiosInstance.js'
 import SettingPopup from '../components/SettingPopup.jsx'
-import { createVictimAPI, getVictimbyUserId } from '../api/Victim.jsx';
+import ConfirmModal from '../components/Forgive.jsx'
+import { createVictimAPI, deleteVictimAPI, EditVictimAPI, getMyVictims } from '../api/victim.js';
+import { createHitEffect } from '../api/hitEffectAPI';
+
+const DEFAULT_HIT_EFFECTS = ['ahhh', 'help me', 'why you do this to me'];
 
 function UserDetail() {
   const navigate = useNavigate();
@@ -12,6 +16,7 @@ function UserDetail() {
   const [isLoading, setIsLoading] = useState(false);
   const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
   const [hateList, setHateList] = useState([]);
+  const [forgiveTarget, setForgiveTarget] = useState(null);
 
   // Get user data from localStorage on component mount
   useEffect(() => {
@@ -41,34 +46,59 @@ function UserDetail() {
   };
 
   const handleSaveData = async (data) => {
-    setSavedData(data);
-    console.log('Saved data:', data);
+    if (data.id) {
+      // Edit existing victim
+      await EditVictimAPI(data.id, {
+        name: data.name,
+        reason: data.reason,
+        hp: data.hp ?? 100,
+      });
+      setSavedData(data);
+      fetchHateList();
+    } else {
+      // Create new victim
+      const res = await createVictimAPI({
+        name: data.name,
+        reason: data.reason,
+        hp: data.hp ?? 100,
+      });
+      // Unwrap: API helper { success, data } wraps backend { success, data: victim }
+      const newVictim = res?.data?.data ?? res?.data;
 
-    let _user = localStorage.getItem('user');
-    _user = JSON.parse(_user);
-    if (!_user || !_user.id) {
-      return;
+      // Seed 3 default hit effects for the new victim
+      if (newVictim?.id) {
+        await Promise.all(
+          DEFAULT_HIT_EFFECTS.map((title) =>
+            createHitEffect({ title, victimId: newVictim.id })
+          )
+        );
+      }
+
+      await fetchHateList();
+
+      // Instantly reopen the edit popup for the freshly created victim
+      if (newVictim?.id) {
+        setSavedData(newVictim);
+        setIsSettingOpen(true);
+      }
     }
-
-    let newData = data;
-    newData.userId = _user.id; // Ensure userId is set from localStorage
-    await createVictimAPI(newData);
-
-    // Refresh the hate list after saving
-    fetchHateList();
   };
 
-  const handleForgive = async (victimId) => {
-    if (window.confirm('Are you sure you want to forgive this person?')) {
-      try {
-        // You'll need to implement this API call
-        // await deleteVictim(victimId);
-        console.log('Forgiving victim:', victimId);
-        // Refresh the list after forgiving
-        fetchHateList();
-      } catch (error) {
-        console.error('Error forgiving victim:', error);
-      }
+  const handleForgive = (victim) => {
+    setForgiveTarget(victim);
+  };
+
+  const confirmForgive = async () => {
+    const victimId = forgiveTarget?.id;
+    setForgiveTarget(null);
+    if (!victimId) return;
+    try {
+      await deleteVictimAPI(victimId);
+      // Remove any saved image for this victim
+      localStorage.removeItem(`victim_image_${victimId}`);
+      fetchHateList();
+    } catch (error) {
+      console.error('Error forgiving victim:', error);
     }
   };
 
@@ -99,7 +129,7 @@ function UserDetail() {
     if (!user?.id) return;
     
     try {
-      const response = await getVictimbyUserId(user.id);
+      const response = await getMyVictims();
       
       if (response.success) {
         setHateList(response.data?.data || []); // Adjust according to your API response structure
@@ -169,6 +199,38 @@ function UserDetail() {
             </div>
           </div>
 
+          {/* Stat cards */}
+          <div className='grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 w-full max-w-[342px] sm:max-w-[1069px] mx-auto mb-4 flex-shrink-0'>
+            {(() => {
+              const has = hateList.length > 0;
+              const recent = has ? hateList.reduce((a, b) => (b.id > a.id ? b : a)) : null;
+              const mostDeath = has ? hateList.reduce((a, b) => ((b.deathCount || 0) > (a.deathCount || 0) ? b : a)) : null;
+              const mostHit = has ? hateList.reduce((a, b) => ((b.hitCount || 0) > (a.hitCount || 0) ? b : a)) : null;
+              return (
+                <>
+                  <div className='bg-white/90 border-1 border-black rounded-[20px] p-4 text-center shadow'>
+                    <p className='text-xs sm:text-sm font-bold text-gray-500 mb-1'>RECENT VICTIM</p>
+                    {recent
+                      ? <p className='text-lg sm:text-xl font-bold truncate'>{recent.name}</p>
+                      : <p className='text-sm sm:text-base font-semibold text-dpink'>Wow you forgive already</p>}
+                  </div>
+                  <div className='bg-white/90 border-1 border-black rounded-[20px] p-4 text-center shadow'>
+                    <p className='text-xs sm:text-sm font-bold text-gray-500 mb-1'>MOST DEATH</p>
+                    {mostDeath && (mostDeath.deathCount || 0) > 0
+                      ? <><p className='text-lg sm:text-xl font-bold truncate'>{mostDeath.name}</p><p className='text-xs sm:text-sm text-red-600'>{mostDeath.deathCount} deaths</p></>
+                      : <p className='text-sm sm:text-base font-semibold text-gray-400'>No deaths yet</p>}
+                  </div>
+                  <div className='bg-white/90 border-1 border-black rounded-[20px] p-4 text-center shadow'>
+                    <p className='text-xs sm:text-sm font-bold text-gray-500 mb-1'>MOST HIT GOT</p>
+                    {mostHit && (mostHit.hitCount || 0) > 0
+                      ? <><p className='text-lg sm:text-xl font-bold truncate'>{mostHit.name}</p><p className='text-xs sm:text-sm text-dblue'>{mostHit.hitCount} hits</p></>
+                      : <p className='text-sm sm:text-base font-semibold text-gray-400'>No hits yet</p>}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+
           <div className='flex flex-col flex-1 min-h-0 max-h-full'>
             <div className='max-w-[342px] sm:max-w-[1069px] bg-lpink rounded-t-[20px] border-1 border-black flex items-center px-6 sm:px-10 mx-auto w-full flex-shrink-0'>
               <div className='flex items-center justify-between w-full py-4'>
@@ -194,7 +256,10 @@ function UserDetail() {
                 hateList.map((victim, index) => (
                   <div key={`${victim.id}-${index}`} className="hate-item bg-yellow flex flex-col items-center justify-between sm:max-w-[1024px] w-full min-h-[98px] sm:min-h-[100px] border-1 border-black rounded-[20px] px-6 sm:px-10 my-2 mx-auto">
                     <div className='flex items-start sm:items-center flex-col sm:flex-row sm:justify-between w-full h-full pt-2 sm:pt-0'>
-                      <div className='flex flex-col'>
+                      <div
+                        className='flex flex-col cursor-pointer hover:opacity-80 transition-opacity'
+                        onClick={() => navigate(`/boxingRing?id=${victim.id}`)}
+                      >
                         <p className='text-md sm:text-xl pb-1 font-semibold'>{victim.name || 'Unnamed Victim'}</p>
                         {victim.reason && (
                           <p className='text-sm text-gray-600 pb-2'>Reason: {victim.reason}</p>
@@ -212,7 +277,7 @@ function UserDetail() {
                         </button>
                         <button
                             className='bg-dpink text-white rounded-[14px] px-4 py-2 border border-black w-full hover:bg-pink-600 transition-colors'
-                            onClick={() => handleForgive(victim.id)}
+                            onClick={() => handleForgive(victim)}
                         >
                           Forgive
                         </button>
@@ -230,7 +295,16 @@ function UserDetail() {
                 isOpen={isSettingOpen}
                 onClose={handleCloseSetting}
                 onSave={handleSaveData}
-                initialData={savedData}
+                victim={savedData}
+            />
+        )}
+
+        {forgiveTarget && (
+            <ConfirmModal
+                isOpen={!!forgiveTarget}
+                onClose={() => setForgiveTarget(null)}
+                onConfirm={confirmForgive}
+                name={forgiveTarget?.name}
             />
         )}
       </div>

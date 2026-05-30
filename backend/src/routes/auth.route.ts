@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import * as authController from "../controllers/auth.controller.js";
-import { authMiddleware } from "../middlewares/auth.middlewares.js";
+import * as authController from "../controllers/auth.controller.ts";
+import { authMiddleware } from "../middlewares/auth.middlewares.ts";
 
 const auth = new Hono();
 

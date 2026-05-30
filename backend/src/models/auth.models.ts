@@ -1,6 +1,7 @@
-import { db } from "../index.js";
+import { db } from "../index.ts";
 import * as bcrypt from "bcrypt";
-import type { UserData, LoginData, AuthResponse } from "../types/type.js";
+import type { UserData, LoginData, AuthResponse } from "../types/type.ts";
+import { isValidEmail } from "../utils/validation.ts";
 
 const validateInput = (userData: UserData) => {
     if (!userData.username || !userData.email || !userData.password) {
@@ -9,7 +10,7 @@ const validateInput = (userData: UserData) => {
     if (userData.username.trim().length < 3) {
         return "Username must be at least 3 characters long";
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(userData.email)) {
+    if (!isValidEmail(userData.email)) {
         return "Please provide a valid email address";
     }
     if (userData.password.length < 6) {
@@ -73,7 +74,7 @@ export const loginUser = async (loginData: LoginData): Promise<AuthResponse> => 
             return { success: false, message: "Email and password are required" };
         }
 
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(loginData.email)) {
+        if (!isValidEmail(loginData.email)) {
             return { success: false, message: "Please provide a valid email address" };
         }
 

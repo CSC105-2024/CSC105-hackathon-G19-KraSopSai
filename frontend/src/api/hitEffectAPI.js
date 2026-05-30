@@ -1,7 +1,7 @@
 // import { data } from "react-router-dom";
 import { Axios } from "../utils/axiosInstance";
 
-export const getAllHitEffects = async () => {
+export const getMyHitEffects = async () => {
     try {
         const response = await Axios.get(`/hitEffect`);
         return {
@@ -9,7 +9,7 @@ export const getAllHitEffects = async () => {
             data: response.data,
         }
     } catch (e) {
-        console.log('Error fetching All hit effects:', e);
+        console.log('Error fetching hit effects:', e);
         return {
             success: false,
             data: null

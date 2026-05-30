@@ -1,53 +1,52 @@
 import React from 'react';
 
-const ModalOverlay = ({ isOpen, onClose, children }) => {
+const ConfirmModal = ({
+    isOpen,
+    onClose,
+    onConfirm,
+    title = 'Forgive this person?',
+    message = 'They will be removed from your hate list for good.',
+    name,
+}) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-ourblack p-1 rounded-lg shadow-2xl max-w-lg w-full">
+                <div className="bg-white rounded-lg overflow-hidden">
 
-            <div
-                className="absolute inset-0 bg-black bg-opacity-50 transition-opacity"
-                onClick={onClose}
-            ></div>
+                    <div className="bg-black text-white text-center py-8 px-8">
+                        <h1 className="text-4xl font-rye font-bold tracking-wider mb-2">FORGIVE</h1>
+                        {name && <p className="text-2xl font-rye">({name})</p>}
+                    </div>
 
-            <div className="relative bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4 transform transition-all">
-                {children}
-            </div>
-        </div>
-    );
-};
+                    <div className="bg-[url('/images/funeral.jpg')] bg-cover bg-center p-8">
+                        <div className="mb-8">
+                            <div className="bg-white border-2 border-black rounded-lg p-3">
+                                <p className="text-black text-base font-medium text-center">
+                                    {message}
+                                </p>
+                            </div>
+                        </div>
 
-const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
-    return (
-        <ModalOverlay isOpen={isOpen} onClose={onClose}>
-            <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-800 mb-8 leading-relaxed">
-                    {title}
-                </h2>
-
-                {message && (
-                    <p className="text-gray-600 mb-8">
-                        {message}
-                    </p>
-                )}
-
-                <div className="flex gap-4 justify-center">
-                    <button
-                        onClick={onClose}
-                        className="px-8 py-3 bg-gray-900 text-white rounded-lg font-semibold hover:bg-gray-800 transition-colors min-w-24"
-                    >
-                        No
-                    </button>
-                    <button
-                        onClick={onConfirm}
-                        className="px-8 py-3 bg-pink-500 text-white rounded-lg font-semibold hover:bg-pink-600 transition-colors min-w-24"
-                    >
-                        Yes
-                    </button>
+                        <div className="flex gap-4">
+                            <button
+                                onClick={onClose}
+                                className="flex-1 bg-gradient-to-t from-black to-gray-600 hover:from-gray-900 hover:to-black text-white font-bold py-4 px-4 text-lg rounded-lg transition-colors shadow-lg"
+                            >
+                                No, keep
+                            </button>
+                            <button
+                                onClick={onConfirm}
+                                className="flex-1 bg-gradient-to-t from-black to-pink-600 hover:bg-pink-800 text-white font-bold py-4 px-4 text-lg rounded-lg transition-colors shadow-lg"
+                            >
+                                Yes, forgive
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </ModalOverlay>
+        </div>
     );
 };
 
