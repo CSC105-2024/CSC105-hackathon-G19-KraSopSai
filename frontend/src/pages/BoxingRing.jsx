@@ -348,9 +348,11 @@ const BoxingRing = () => {
           <p className="text-xs text-gray-300 mt-3">Saved to this browser. Applies on next hit.</p>
         </div>
       )}
-      <CustomCursorImage
-       cursorImage = {currentWeapon.WeaponImage}
-       cursorSize = {100}/>
+      {!isEditOpen && !showFuneral && (
+        <CustomCursorImage
+         cursorImage = {currentWeapon.WeaponImage}
+         cursorSize = {100}/>
+      )}
 
       <div>
       <div className="absolute top-50 left-1/2 transform -translate-x-1/2 text-white text-3xl font-bold text-center drop-shadow-lg shadow-black
