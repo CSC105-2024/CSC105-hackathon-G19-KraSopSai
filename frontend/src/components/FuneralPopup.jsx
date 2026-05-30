@@ -1,26 +1,24 @@
-import React, { useState } from 'react';
+import React from 'react';
 
 const FuneralPopup = ({
                           isOpen = true,
                           onClose,
+                          onRevive,
+                          onAccept,
                           characterData = {
                               name: 'Player',
                               image: null
                           }
                       }) => {
-    const [showPopup, setShowPopup] = useState(isOpen);
-
     const handleRevive = () => {
-        setShowPopup(false);
-        onClose?.();
+        (onRevive ?? onClose)?.();
     };
 
     const handleAcceptDeath = () => {
-        setShowPopup(false);
-        onClose?.();
+        (onAccept ?? onClose)?.();
     };
 
-    if (!showPopup) {
+    if (!isOpen) {
         return null;
     }
 

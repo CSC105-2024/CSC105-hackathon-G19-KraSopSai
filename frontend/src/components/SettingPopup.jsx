@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload } from 'lucide-react';
 import { Axios } from '../utils/axiosInstance';
-import { createHitEffect, editHitEffect, deleteHitEffect } from '../api/hitEffectAPI';
+import { createHitEffect, editHitEffect, deleteHitEffect, getMyHitEffects } from '../api/hitEffectAPI';
 
 function SettingPopup({ isOpen, onClose, victim, onSave }) {
     const victimId = victim?.id;
@@ -29,6 +29,17 @@ function SettingPopup({ isOpen, onClose, victim, onSave }) {
             ? localStorage.getItem(`victim_image_${victim.id}`)
             : null;
         setCharacterImage(savedImage);
+
+        // Load this victim's hit effects from the server (edit mode only)
+        if (victim?.id) {
+            (async () => {
+                const res = await getMyHitEffects();
+                const all = res?.data?.data ?? [];
+                setHitEffects(all.filter((eff) => eff.victimId === victim.id));
+            })();
+        } else {
+            setHitEffects([]);
+        }
     }, [isOpen, victim?.id, victim?.name, victim?.reason]);
 
     if (!isOpen) {

@@ -329,7 +329,8 @@ const BoxingRing = () => {
     {showFuneral && (
       <FuneralPopup
         isOpen={showFuneral}
-        onClose={() => navigate('/userDetail')}
+        onRevive={() => { setShowFuneral(false); setHp(maxhp); }}
+        onAccept={() => navigate('/userDetail')}
         characterData={{ name: Victim?.name ?? 'Player', image: victimImage }}
       />
     )}
