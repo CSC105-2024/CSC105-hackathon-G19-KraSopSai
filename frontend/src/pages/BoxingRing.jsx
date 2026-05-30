@@ -3,6 +3,7 @@ import { CustomCursorClick } from '../components/CustomCursorClick';
 import { CustomCursorImage } from '../components/CustomCursorImage';
 import { Link , useSearchParams,useNavigate } from "react-router-dom";
 import { getVictimbyId, EditVictimAPI } from '../api/victim.js';
+import { getMyHitEffects } from '../api/hitEffectAPI';
 import SettingPopup from '../components/SettingPopup.jsx';
 import FuneralPopup from '../components/FuneralPopup.jsx';
 
@@ -38,6 +39,13 @@ const BoxingRing = () => {
               setVictimImage(savedImage);
               setCurrentFace(savedImage);
             }
+            // Load this victim's hit effects as popup messages
+            const he = await getMyHitEffects();
+            const all = he?.data?.data ?? [];
+            const titles = all
+              .filter((eff) => eff.victimId === v.id)
+              .map((eff) => eff.title);
+            setmessage(titles);
           }
         } else {
           setError('Failed to fetch victim data');
@@ -131,7 +139,9 @@ const BoxingRing = () => {
     setCurrentFace(victimImage || Face[3]);
     setIsClicked(true)
   
-    const randomMessage = messages[Math.floor(Math.round(Math.random() * messages.length))];
+    const randomMessage = messages.length
+      ? messages[Math.floor(Math.random() * messages.length)]
+      : '';
     const rect = e.currentTarget.getBoundingClientRect();
     const randomX = Math.random() * (window.innerWidth);
     const randomY = Math.random()*300 +350;
