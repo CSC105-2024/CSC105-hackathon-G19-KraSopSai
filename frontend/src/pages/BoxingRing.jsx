@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { CustomCursorClick } from '../components/CustomCursorClick';
+import { CustomCursorImage } from '../components/CustomCursorImage';
 import { Link , useSearchParams,useNavigate } from "react-router-dom";
-import { getVictimbyId } from '../api/victim.js';
+import { getVictimbyId, EditVictimAPI } from '../api/victim.js';
+import SettingPopup from '../components/SettingPopup.jsx';
+import FuneralPopup from '../components/FuneralPopup.jsx';
 
 const BoxingRing = () => {
 
@@ -32,6 +35,7 @@ const BoxingRing = () => {
           if (v?.id) {
             const savedImage = localStorage.getItem(`victim_image_${v.id}`);
             if (savedImage) {
+              setVictimImage(savedImage);
               setCurrentFace(savedImage);
             }
           }
@@ -57,6 +61,9 @@ const BoxingRing = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isClicked, setIsClicked] = useState(false);
+  const [victimImage, setVictimImage] = useState(null); // localStorage face override
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [showFuneral, setShowFuneral] = useState(false);
   const BG = [
     "./images/BG-sun.jpg",
     "./images/dinner.jpg",
@@ -121,7 +128,7 @@ const BoxingRing = () => {
 
   const handleCircleClick = (e) => {
 
-    setCurrentFace(Face[3]);
+    setCurrentFace(victimImage || Face[3]);
     setIsClicked(true)
   
     const randomMessage = messages[Math.floor(Math.round(Math.random() * messages.length))];
@@ -162,18 +169,40 @@ const BoxingRing = () => {
     }
      setTimeout(() => {
     if(healthPercentage > 60){
-      setCurrentFace(Face[0]);
+      setCurrentFace(victimImage || Face[0]);
       setcurrentBG(BG[0])
     }else if(healthPercentage > 30){
-      setCurrentFace(Face[1]);
+      setCurrentFace(victimImage || Face[1]);
       setcurrentBG(BG[1])
       setface('./images/blood2.PNG')
     }else{
-      setCurrentFace(Face[2]);
+      setCurrentFace(victimImage || Face[2]);
       setcurrentBG(BG[2])
       setface('./images/blood1.PNG')
     }
     }, 200);
+  };
+
+  // Show funeral popup when HP reaches 0
+  useEffect(() => {
+    if (hp <= 0) {
+      setShowFuneral(true);
+    }
+  }, [hp]);
+
+  // Save edits from the in-ring edit popup
+  const handleEditSave = async (data) => {
+    if (data.id) {
+      await EditVictimAPI(data.id, {
+        name: data.name,
+        reason: data.reason,
+        hp: data.hp ?? Victim?.hp ?? 100,
+      });
+      setVictim((prev) => ({ ...prev, name: data.name, reason: data.reason }));
+      const savedImage = localStorage.getItem(`victim_image_${data.id}`);
+      setVictimImage(savedImage);
+      if (savedImage) setCurrentFace(savedImage);
+    }
   };
 
   const handleWeaponChange = (e) => {
@@ -227,17 +256,20 @@ const BoxingRing = () => {
       </select>
     </div>
           </button>
-          <button className="md:hidden bg-custom-lightgradient text-black font-bold text-xl px-4 py-2 rounded hover:bg-white">
+          <button onClick={() => setIsEditOpen(true)} className="md:hidden bg-custom-lightgradient text-black font-bold text-xl px-4 py-2 rounded hover:bg-white">
             Edit
           </button>
-          <button className="hidden md:block bg-custom-lightgradient text-black font-bold text-xl px-4 py-2 rounded hover:bg-white">
+          <button onClick={() => setIsEditOpen(true)} className="hidden md:block bg-custom-lightgradient text-black font-bold text-xl px-4 py-2 rounded hover:bg-white">
             Edit this guy
           </button>
-          <button className="bg-gray-600 text-white text-xl px-4 py-2 rounded mr-3 hover:bg-gray-700">
+          <button onClick={() => navigate('/userDetail')} className="bg-gray-600 text-white text-xl px-4 py-2 rounded mr-3 hover:bg-gray-700">
             Back
           </button>
         </div>
       </div>
+      <CustomCursorImage
+       cursorImage = {currentWeapon.WeaponImage}
+       cursorSize = {100}/>
 
       <div>
       <div className="absolute top-50 left-1/2 transform -translate-x-1/2 text-white text-3xl font-bold text-center drop-shadow-lg shadow-black
@@ -284,6 +316,23 @@ const BoxingRing = () => {
       )}
     </div>
     </CustomCursorClick>
+
+    {isEditOpen && (
+      <SettingPopup
+        isOpen={isEditOpen}
+        onClose={() => setIsEditOpen(false)}
+        onSave={handleEditSave}
+        victim={Victim}
+      />
+    )}
+
+    {showFuneral && (
+      <FuneralPopup
+        isOpen={showFuneral}
+        onClose={() => navigate('/userDetail')}
+        characterData={{ name: Victim?.name ?? 'Player', image: victimImage }}
+      />
+    )}
     </div>
   );
 };

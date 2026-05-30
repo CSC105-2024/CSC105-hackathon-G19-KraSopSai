@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import { Axios } from '../utils/axiosInstance.js'
 import SettingPopup from '../components/SettingPopup.jsx'
 import { createVictimAPI, deleteVictimAPI, EditVictimAPI, getMyVictims } from '../api/victim.js';
+import { createHitEffect } from '../api/hitEffectAPI';
+
+const DEFAULT_HIT_EFFECTS = ['ahhh', 'help me', 'why you do this to me'];
 
 function UserDetail() {
   const navigate = useNavigate();
@@ -41,8 +44,6 @@ function UserDetail() {
   };
 
   const handleSaveData = async (data) => {
-    setSavedData(data);
-
     if (data.id) {
       // Edit existing victim
       await EditVictimAPI(data.id, {
@@ -50,17 +51,35 @@ function UserDetail() {
         reason: data.reason,
         hp: data.hp ?? 100,
       });
+      setSavedData(data);
+      fetchHateList();
     } else {
       // Create new victim
-      await createVictimAPI({
+      const res = await createVictimAPI({
         name: data.name,
         reason: data.reason,
         hp: data.hp ?? 100,
       });
-    }
+      // Unwrap: API helper { success, data } wraps backend { success, data: victim }
+      const newVictim = res?.data?.data ?? res?.data;
 
-    // Refresh the hate list after saving
-    fetchHateList();
+      // Seed 3 default hit effects for the new victim
+      if (newVictim?.id) {
+        await Promise.all(
+          DEFAULT_HIT_EFFECTS.map((title) =>
+            createHitEffect({ title, victimId: newVictim.id })
+          )
+        );
+      }
+
+      await fetchHateList();
+
+      // Instantly reopen the edit popup for the freshly created victim
+      if (newVictim?.id) {
+        setSavedData(newVictim);
+        setIsSettingOpen(true);
+      }
+    }
   };
 
   const handleForgive = async (victimId) => {
