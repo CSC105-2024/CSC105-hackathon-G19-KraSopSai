@@ -2,7 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Axios } from '../utils/axiosInstance.js'
 import SettingPopup from '../components/SettingPopup.jsx'
-import { createVictimAPI, getMyVictims } from '../api/victim.js';
+import { createVictimAPI, deleteVictimAPI, EditVictimAPI, getMyVictims } from '../api/victim.js';
 
 function UserDetail() {
   const navigate = useNavigate();
@@ -42,17 +42,22 @@ function UserDetail() {
 
   const handleSaveData = async (data) => {
     setSavedData(data);
-    console.log('Saved data:', data);
 
-    let _user = localStorage.getItem('user');
-    _user = JSON.parse(_user);
-    if (!_user || !_user.id) {
-      return;
+    if (data.id) {
+      // Edit existing victim
+      await EditVictimAPI(data.id, {
+        name: data.name,
+        reason: data.reason,
+        hp: data.hp ?? 100,
+      });
+    } else {
+      // Create new victim
+      await createVictimAPI({
+        name: data.name,
+        reason: data.reason,
+        hp: data.hp ?? 100,
+      });
     }
-
-    let newData = data;
-    newData.userId = _user.id; // Ensure userId is set from localStorage
-    await createVictimAPI(newData);
 
     // Refresh the hate list after saving
     fetchHateList();
@@ -61,10 +66,9 @@ function UserDetail() {
   const handleForgive = async (victimId) => {
     if (window.confirm('Are you sure you want to forgive this person?')) {
       try {
-        // You'll need to implement this API call
-        // await deleteVictim(victimId);
-        console.log('Forgiving victim:', victimId);
-        // Refresh the list after forgiving
+        await deleteVictimAPI(victimId);
+        // Remove any saved image for this victim
+        localStorage.removeItem(`victim_image_${victimId}`);
         fetchHateList();
       } catch (error) {
         console.error('Error forgiving victim:', error);
@@ -233,7 +237,7 @@ function UserDetail() {
                 isOpen={isSettingOpen}
                 onClose={handleCloseSetting}
                 onSave={handleSaveData}
-                initialData={savedData}
+                victim={savedData}
             />
         )}
       </div>

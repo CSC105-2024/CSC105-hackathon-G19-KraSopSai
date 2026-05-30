@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { CustomCursorClick } from '../components/CustomCursorClick';
-import { CustomCursorImage } from '../components/CustomCursorImage';
 import { Link , useSearchParams,useNavigate } from "react-router-dom";
 import { getVictimbyId } from '../api/victim.js';
 
@@ -25,7 +24,17 @@ const BoxingRing = () => {
         const result = await getVictimbyId(Id);
         
         if (result.success) {
-          setVictim(result.data);
+          // Backend returns { success, data: victim, msg }; the API helper
+          // wraps that in another { success, data }, so unwrap twice.
+          const v = result.data?.data ?? result.data;
+          setVictim(v);
+          // Override default face with a localStorage image if user saved one.
+          if (v?.id) {
+            const savedImage = localStorage.getItem(`victim_image_${v.id}`);
+            if (savedImage) {
+              setCurrentFace(savedImage);
+            }
+          }
         } else {
           setError('Failed to fetch victim data');
         }
@@ -229,14 +238,11 @@ const BoxingRing = () => {
           </button>
         </div>
       </div>
-      <CustomCursorImage
-       cursorImage = {currentWeapon.WeaponImage} 
-       cursorSize = {100}/>
-      
+
       <div>
       <div className="absolute top-50 left-1/2 transform -translate-x-1/2 text-white text-3xl font-bold text-center drop-shadow-lg shadow-black
       w-80 md:w-120">
-        <div className=' break-words mb-2'>Duck you ass hole</div>
+        <div className=' break-words mb-2'>{Victim?.name ?? ''}</div>
         <div className='bg-black border-2 border-black rounded-2xl shadow-2xl'>
           <div className={`h-10 rounded-2xl transition-all duration-300 ease-out ${getHealthColor()}`}
           style={{ width: `${healthPercentage}%` }}><div>{/*HP*/}</div>
