@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Axios } from '../utils/axiosInstance.js'
 import SettingPopup from '../components/SettingPopup.jsx'
+import ConfirmModal from '../components/Forgive.jsx'
 import { createVictimAPI, deleteVictimAPI, EditVictimAPI, getMyVictims } from '../api/victim.js';
 import { createHitEffect } from '../api/hitEffectAPI';
 
@@ -15,6 +16,7 @@ function UserDetail() {
   const [isLoading, setIsLoading] = useState(false);
   const [showLogoutSuccess, setShowLogoutSuccess] = useState(false);
   const [hateList, setHateList] = useState([]);
+  const [forgiveTarget, setForgiveTarget] = useState(null);
 
   // Get user data from localStorage on component mount
   useEffect(() => {
@@ -82,16 +84,21 @@ function UserDetail() {
     }
   };
 
-  const handleForgive = async (victimId) => {
-    if (window.confirm('Are you sure you want to forgive this person?')) {
-      try {
-        await deleteVictimAPI(victimId);
-        // Remove any saved image for this victim
-        localStorage.removeItem(`victim_image_${victimId}`);
-        fetchHateList();
-      } catch (error) {
-        console.error('Error forgiving victim:', error);
-      }
+  const handleForgive = (victim) => {
+    setForgiveTarget(victim);
+  };
+
+  const confirmForgive = async () => {
+    const victimId = forgiveTarget?.id;
+    setForgiveTarget(null);
+    if (!victimId) return;
+    try {
+      await deleteVictimAPI(victimId);
+      // Remove any saved image for this victim
+      localStorage.removeItem(`victim_image_${victimId}`);
+      fetchHateList();
+    } catch (error) {
+      console.error('Error forgiving victim:', error);
     }
   };
 
@@ -238,7 +245,7 @@ function UserDetail() {
                         </button>
                         <button
                             className='bg-dpink text-white rounded-[14px] px-4 py-2 border border-black w-full hover:bg-pink-600 transition-colors'
-                            onClick={() => handleForgive(victim.id)}
+                            onClick={() => handleForgive(victim)}
                         >
                           Forgive
                         </button>
@@ -257,6 +264,15 @@ function UserDetail() {
                 onClose={handleCloseSetting}
                 onSave={handleSaveData}
                 victim={savedData}
+            />
+        )}
+
+        {forgiveTarget && (
+            <ConfirmModal
+                isOpen={!!forgiveTarget}
+                onClose={() => setForgiveTarget(null)}
+                onConfirm={confirmForgive}
+                name={forgiveTarget?.name}
             />
         )}
       </div>
